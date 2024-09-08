@@ -1,0 +1,221 @@
+﻿@page "/"
+
+<PageTitle>Daily attendance for @selectedDate</PageTitle>
+
+<h4>Daily attendance for:  
+    <select @onchange="OnDateChanged">
+        @foreach (var date in availableDates)
+        {
+            <option value="@date">@date.ToString("MMMM dd, yyyy")</option>
+        }
+    </select>
+    <button @onclick="() => SaveStudentDataAsync(selectedDate)">Save</button>
+</h4>
+
+@if (loading || saving)
+{
+<div style="height: 85px; width: 300px; background-color: bisque; border: solid 4px black; z-index: 5; position: absolute; left: 300px; top: 200px;"> 
+    @if (loading)
+    {
+        <span>Loading...</span>
+    }
+    else if (saving)
+    {
+        <span>Saving...</span>
+    }
+</div>
+}
+
+<table border="1">
+    @{int studentnumber = 0;}
+    @for (int i = 0; i < 4; i++)
+    {
+        <tr>
+            @for (int j = 0; j < 8; j++, studentnumber++)
+            {
+                var localStudentNumber = studentnumber; // Create a local copy of studentnumber
+                <td @onclick="() => TogglePresent(localStudentNumber)" style="cursor: pointer;">
+                        <img src="https://studentinfo.blob.core.windows.net/519fall2024/@(students[studentnumber].BUID).jpg" width="90" height="90" style="border: 5px solid @(students[studentnumber].Present ? "green" : "red");" />
+                    <br />
+                    @students[studentnumber].Name
+                    <br />
+                    @students[studentnumber].BUID
+                </td>
+                if (studentnumber == students.Count - 1)
+                {
+                    break;
+                }
+            }
+        </tr>
+        if (studentnumber == students.Count - 1)
+        {
+            break;
+        }
+    }
+</table>
+
+
+@code {
+
+    private string selectedDate;
+    private bool loading = true;
+    private bool saving = false;
+
+    // make a static list of dates, every monday starting on Sept 9th
+    private List<DateTime> availableDates = new List<DateTime>();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        GenerateAvailableDates();
+
+        // Set the default date to the closest date in the list
+        selectedDate = availableDates.OrderBy(x => Math.Abs((x - DateTime.Now).TotalDays)).First().ToString("yyyy-MM-dd");
+    }
+
+//    using System.Text.Encodings.Web;
+    private void GenerateAvailableDates()
+    {
+        DateTime startDate = new DateTime(2024, 9, 9);
+        for (int i = 0; i < 13; i++) // Generate dates for one year
+        {
+            availableDates.Add(startDate.AddDays(i * 7));
+        }
+    }
+
+    public class Student
+    {
+        public string Name { get; set; }
+        public string BUID { get; set; }
+        public bool Present { get; set; }
+    }
+
+    public class StudentData
+    {
+        public string BUID { get; set; }
+        public bool Present { get; set; }
+    }
+    private async Task OnDateChanged(ChangeEventArgs e)
+    {
+        if (e == null || e.Value == null) selectedDate = availableDates[0].ToString("yyyy-MM-dd");
+        else selectedDate = e.Value.ToString();
+
+        loading = true;
+        StateHasChanged();
+        await LoadStudentDataAsync(selectedDate);
+        loading = false;
+        StateHasChanged();
+    }
+
+    // Save student attence data to blob storage
+    private async Task SaveStudentDataAsync(string date)
+    {
+        saving = true;
+        StateHasChanged();
+        date = System.Text.Encodings.Web.UrlEncoder.Default.Encode(date) + ".json";
+        var blobUri = new Uri($"https://studentinfo.blob.core.windows.net/519fall2024/{date}");
+
+        try {
+            var jsonData = System.Text.Json.JsonSerializer.Serialize(students.Select(x => new StudentData { BUID = x.BUID, Present = x.Present }).ToList());
+
+            var credential = new Azure.Identity.DefaultAzureCredential();
+            var blobClient = new Azure.Storage.Blobs.BlobClient(blobUri, credential);
+
+            using (var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonData)))
+            {
+                Console.WriteLine("Uploading data to blob storage");
+                await blobClient.UploadAsync(stream, overwrite: true);
+                Console.WriteLine("Data saved successfully");
+            }
+
+        }
+        catch (Exception e) {
+            Console.WriteLine($"Error saving student data: {e.Message}");
+        }
+        saving = false;
+        StateHasChanged();
+
+    }
+    // Load student attence data from blob storage
+    private  async Task LoadStudentDataAsync(string date)
+    {
+        date = System.Text.Encodings.Web.UrlEncoder.Default.Encode(date) + ".json";
+        Console.WriteLine($"Loading student data for {date}");
+        using (var httpClient = new HttpClient())
+        {
+            bool responseFound = false;
+            try {
+                var blobUri = new Uri($"https://studentinfo.blob.core.windows.net/519fall2024/{date}");
+                Console.WriteLine($"Blob URI: {blobUri}");
+
+                var response = await httpClient.GetAsync(blobUri.ToString());
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var attendance = await response.Content.ReadFromJsonAsync<List<StudentData>>();
+                    if (attendance != null)
+                    {
+                        responseFound = true;
+                        foreach (var student in attendance) {
+                            var index = students.FindIndex(x => x.BUID == student.BUID);
+                            if (index != -1) {
+                                students[index].Present = student.Present;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e) {
+                Console.WriteLine($"Error loading student data: {e.Message}");
+            }
+
+            if (!responseFound)  {
+                foreach (var student in students) {
+                    student.Present = false;
+                }
+            }
+        }
+    }
+
+
+    void TogglePresent(int index)
+    {
+        Console.WriteLine($"Index is {index}");
+        students[index].Present = !students[index].Present;
+        Console.WriteLine($"{students[index].Name} is {(students[index].Present ? "present" : "absent")}");
+        StateHasChanged(); // Ensure the UI is updated
+    }
+
+    List<Student> students = new List<Student>
+    {
+        new Student { Name = "Celine Boudaie", BUID = "U39796772" },
+        new Student { Name = "Daniel Doh", BUID = "U77365336" },
+        new Student { Name = "Paul Martin Enano", BUID = "U75020763" },
+        new Student { Name = "Songming Fan", BUID = "U42395584" },
+        new Student { Name = "Jaimey Frank", BUID = "U50962314" },
+        new Student { Name = "Simeon Gluzman", BUID = "U99736754" },
+        new Student { Name = "Arav Hak", BUID = "U06965068" },
+        new Student { Name = "Remus Harris", BUID = "U63988079" },
+        new Student { Name = "Yadi He", BUID = "U91873499" },
+        new Student { Name = "Jasper Hoong", BUID = "U91969628" },  
+        new Student { Name = "Vittori Huang", BUID = "U32406834" },
+        new Student { Name = "Ananiya Kinfe", BUID = "U54912478" },
+        new Student { Name = "Parthiv Krishnan", BUID = "U05384866" },
+        new Student { Name = "Jida Li", BUID = "U97480525" },
+        new Student { Name = "Mingyang Li", BUID = "U87143313" },
+        new Student { Name = "Jamie Lin", BUID = "U87503854" },
+        new Student { Name = "Sarah Malik", BUID = "U12663796" },
+        new Student { Name = "Alexander Miller", BUID = "U52161825" },
+        new Student { Name = "Grace Murphy", BUID = "U52134410" },
+        new Student { Name = "Thomas Nguyen", BUID = "U20296777" },
+        new Student { Name = "Henry Price", BUID = "U02011493" },
+        new Student { Name = "Binh Tran", BUID = "U95343637" },
+        new Student { Name = "Justin Wang", BUID = "U21498925" },
+        new Student { Name = "Xin Wei", BUID = "U37607278" },
+        new Student { Name = "Josh Yip", BUID = "U38915680" },
+        new Student { Name = "Tiffany Yu", BUID = "U37806150" },
+        new Student { Name = "Brian Zeng", BUID = "U43830345" },
+        new Student { Name = "Haoran Zhang", BUID = "U66088985" },
+        new Student { Name = "Justin Zheng", BUID = "U67912393" }
+    };
+};
