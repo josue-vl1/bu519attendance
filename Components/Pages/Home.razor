@@ -1,7 +1,9 @@
 ﻿@page "/"
 
 @using Attendance.Components.Models
-
+@using Microsoft.AspNetCore.Components.Authorization
+@inject HttpContextAccessorService httpContextAccessorService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Daily attendance for @selectedDate</PageTitle>
 
@@ -86,6 +88,15 @@
         // sort by name
         students = students.OrderBy(x => x.Name).ToList();
         loading = false;
+
+
+        //Console.WriteLine("Checking user permissions " + httpContextAccessorService());
+        var principalName = httpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
+        
+         Console.WriteLine ("checking user :" + principalName);
+        //if (principalName=="nagendra@bu.edu" || principalName=="langd0n@bu.edu" || principalName=="matzh@bu.edu") {
+        //    showButtons = true;
+       // }
     }
 
 //    using System.Text.Encodings.Web;

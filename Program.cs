@@ -1,10 +1,15 @@
 using attendance.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddHttpContextAccessor(); // Register IHttpContextAccessor
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>(); // Register AuthenticationStateProvider
+builder.Services.AddScoped<HttpContextAccessorService>(); // Register HttpContextAccessorService
 
 var app = builder.Build();
 
