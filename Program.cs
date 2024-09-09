@@ -36,6 +36,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
+app.UseSession(); // Add session middleware
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
