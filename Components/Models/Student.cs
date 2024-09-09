@@ -1,0 +1,15 @@
+using System.Text.Json.Serialization;
+
+namespace Attendance.Components.Models
+{
+    public class Student
+    {
+        public string Name { get; set; }
+        public string BUID { get; set; }
+        public bool Present { get; set; }
+        public bool IsInactive { get; set; } = false; // New property to track active state, default to true
+
+        [JsonIgnore]
+        public bool IsEditing { get; set; } = false; // New property to track edit state, default to false
+    }
+}
