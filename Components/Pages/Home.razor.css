@@ -1,0 +1,32 @@
+.student {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 3px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 130px;
+    height: 150px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+
+.students {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.studentinfo {
+    font-size: small;
+}
+
+.present {
+    background-color: #c8e6c9;
+}
+
+.absent {
+    background-color: #ffcdd2;
+    filter: grayscale(100%);
+}
