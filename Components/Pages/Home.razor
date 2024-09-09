@@ -11,6 +11,7 @@
 {
     <h1>Unauthorized</h1>
     <p>You are not authorized to view this page.</p>
+@principalName
 
 }
 else {
@@ -78,6 +79,7 @@ else {
     private bool loading = false;
     private bool saving = false;
     private bool showButtons = false;
+private string principalName = "foo";
 
     // make a static list of dates, every monday starting on Sept 9th
     private List<DateTime> availableDates = new List<DateTime>();
@@ -99,7 +101,7 @@ else {
 
 
         //Console.WriteLine("Checking user permissions " + httpContextAccessorService());
-        var principalName = httpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
+         principalName = httpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
         
         if (principalName=="nagendra@bu.edu" || principalName=="langd0n@bu.edu" || principalName=="matzh@bu.edu") {
             showButtons = true;
