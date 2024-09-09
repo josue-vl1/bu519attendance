@@ -89,6 +89,31 @@ private string principalName = "foo";
     protected override void OnInitialized()
     {
         base.OnInitialized();
+
+        var isInitialized = HttpContextAccessorService.Session.GetString("isInitialized");
+        // Check if initialization has already been performed
+
+        if (string.IsNullOrEmpty(isInitialized))
+        {
+            principalName = HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
+            if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
+            {
+                showButtons = true;
+            }
+            HttpContextAccessorService.Session.SetString("isInitialized", principalName);
+
+        }
+        else
+        {
+            // If already initialized, set showButtons based on the principal name
+            principalName = HttpContextAccessorService.HttpContext.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"].ToString();
+            if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
+            {
+                showButtons = true;
+            }
+        }
+
+
         GenerateAvailableDates();
 
         // Set the default date to the closest date in the list

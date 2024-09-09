@@ -119,14 +119,8 @@ else {
             {
                 showButtons = true;
             }
-            HttpContextAccessorService.Session.SetString("isInitialized", "true");
+            HttpContextAccessorService.Session.SetString("isInitialized", principalName);
 
-            loading = true;
-            await LoadStudentsAsync();
-            loading = false;
-
-            // sort by name
-            students = students.OrderBy(x => x.Name).ToList();
         }
         else
         {
@@ -137,6 +131,13 @@ else {
                 showButtons = true;
             }
         }
+
+        loading = true;
+        await LoadStudentsAsync();
+        loading = false;
+
+        // sort by name
+        students = students.OrderBy(x => x.Name).ToList();
     }
 
     private void ToggleEdit(Student student)
