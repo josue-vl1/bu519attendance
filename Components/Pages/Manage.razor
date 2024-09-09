@@ -121,7 +121,7 @@ else {
         // Check authorization
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
-        var principalName = user.Identity.Name;
+        principalName = user.Identity.Name;
 
         // Ensure the following line runs only once
         if (!_isInitialized)
