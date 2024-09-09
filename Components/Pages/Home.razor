@@ -124,15 +124,6 @@ private string principalName = "foo";
         // sort by name
         students = students.OrderBy(x => x.Name).ToList();
         loading = false;
-
-
-        //Console.WriteLine("Checking user permissions " + httpContextAccessorService());
-        if (principalName == "foo")
-         principalName = httpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
-        
-        if (principalName=="nagendra@bu.edu" || principalName=="langd0n@bu.edu" || principalName=="matzh@bu.edu") {
-            showButtons = true;
-        }
     }
 
 //    using System.Text.Encodings.Web;
