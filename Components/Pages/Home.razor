@@ -12,8 +12,6 @@
 {
     <h1>Unauthorized</h1>
     <p>You are not authorized to view this page.</p>
-@principalName
-
 }
 else {
     <h4>Daily attendance for:
@@ -53,8 +51,10 @@ else {
 
                 var localStudentNumber = studentnumber; // Create a local copy of studentnumber
                 var status = students[studentnumber].Present ? "present" : "absent";
+                var deco = students[studentnumber].Present ? "style=\"border: 5px solid green\"" : "";
                 <div class="student @status" @onclick="() => TogglePresent(localStudentNumber)"  >
-                    <img src="https://studentinfo.blob.core.windows.net/519fall2024/@(students[studentnumber].BUID).jpg" width="90" height="90" style="border: 5px solid @(students[studentnumber].Present ? "green" : "red");" />
+                    <img src="https://studentinfo.blob.core.windows.net/519fall2024/@(students[studentnumber].BUID).jpg" width="90" height="90"
+                     style="@(students[studentnumber].Present ? "border: 5px solid green" : "");" />
                     <div class="studentinfo" >
                         @students[studentnumber].Name
                         <br />

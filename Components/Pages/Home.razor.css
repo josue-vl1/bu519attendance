@@ -30,3 +30,11 @@
     background-color: #ffcdd2;
     filter: grayscale(100%);
 }
+
+.student img.present {
+    border: 5px solid green;
+}
+
+.present img {
+    border: 5px solid green;
+}
