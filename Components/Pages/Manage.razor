@@ -1,0 +1,173 @@
+﻿@page "/manage"
+@using Attendance.Components.Models
+@attribute [StreamRendering]
+
+<PageTitle>Manage Students</PageTitle>
+
+<h1>Students</h1>
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>BUID</th>
+            <th>Inactive</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var student in students)
+        {
+            <tr>
+                <td>
+                    @if (student.IsEditing)
+                    {
+                        <input @bind="student.Name" class="form-control" />
+                    }
+                    else
+                    {
+                        @student.Name
+                    }
+                </td>
+                <td>
+                    @if (student.IsEditing)
+                    {
+                        <input @bind="student.BUID" class="form-control" />
+                    }
+                    else
+                    {
+                        @student.BUID
+                    }
+                </td>
+                <td>
+                    @if (student.IsEditing)
+                    {
+                        <input type="checkbox" @bind="student.IsInactive" />
+                    }
+                    else
+                    {
+                        <input type="checkbox" checked="@student.IsInactive" disabled />
+                    }
+                </td>
+                <td>
+                    <a href="#" @onclick:preventDefault @onclick="() => ToggleEdit(student)">
+                        @(student.IsEditing ? "Save" : "Edit")
+                    </a>
+                </td>
+            </tr>
+        }
+        <tr>
+            <td>
+                <input @bind="newStudent.Name" class="form-control" placeholder="New Name" />
+            </td>
+            <td>
+                <input @bind="newStudent.BUID" class="form-control" placeholder="New BUID" />
+            </td>
+            <td>
+                <button @onclick="AddStudent" class="btn btn-primary">Add</button>
+            </td>
+        </tr>
+        
+        </tbody>
+</table>
+@if (loading || saving)
+{
+<div style="height: 85px; width: 300px; background-color: bisque; border: solid 4px black; z-index: 5; position: absolute; left: 300px; top: 200px;"> 
+    @if (loading)
+    {
+        <span>Loading...</span>
+    }
+    else if (saving)
+    {
+        <span>Saving...</span>
+    }
+</div>
+}
+
+@code {
+    private bool loading = false;
+    private bool saving = false;
+    private Student newStudent = new Student();
+    List<Student> students = new List<Student>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        loading = true;
+        await LoadStudentsAsync();
+        loading = false;
+
+        // sort by name
+        students = students.OrderBy(x => x.Name).ToList();
+
+    }
+
+    private void ToggleEdit(Student student)
+    {
+        student.IsEditing = !student.IsEditing;
+        if (!student.IsEditing)
+        {
+            SerializeStudents();
+        }
+    }
+
+    private void AddStudent()
+    {
+        if (!string.IsNullOrWhiteSpace(newStudent.Name) && !string.IsNullOrWhiteSpace(newStudent.BUID))
+        {
+            students.Add(new Student { Name = newStudent.Name, BUID = newStudent.BUID });
+            newStudent = new Student(); // Reset the new student entry
+            SerializeStudents();
+        }
+    }
+
+    private async Task LoadStudentsAsync()
+    {
+        var blobUri = new Uri($"https://studentinfo.blob.core.windows.net/519fall2024/students.json");
+
+        try {
+            var credential = new Azure.Identity.DefaultAzureCredential();
+            var blobClient = new Azure.Storage.Blobs.BlobClient(blobUri, credential);
+
+            var response = await blobClient.DownloadAsync();
+            using (var streamReader = new StreamReader(response.Value.Content))
+            {
+                var jsonData = await streamReader.ReadToEndAsync();
+                students = System.Text.Json.JsonSerializer.Deserialize<List<Student>>(jsonData) ?? new List<Student>();
+            }
+
+            Console.WriteLine("Data loaded successfully");
+        }
+        catch (Exception e) {
+            Console.WriteLine($"Error loading student data: {e.Message}");
+        }
+    }
+
+    private void SerializeStudents()
+    {
+        saving = true;
+        var jsonData = System.Text.Json.JsonSerializer.Serialize(students);
+
+        var blobUri = new Uri($"https://studentinfo.blob.core.windows.net/519fall2024/students.json");
+
+        try {
+            var credential = new Azure.Identity.DefaultAzureCredential();
+            var blobClient = new Azure.Storage.Blobs.BlobClient(blobUri, credential);
+
+            using (var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonData)))
+            {
+                Console.WriteLine("Uploading data to blob storage");
+                blobClient.Upload(stream, overwrite: true);
+                Console.WriteLine("Data saved successfully");
+            }
+
+        }
+        catch (Exception e) {
+            Console.WriteLine($"Error saving student data: {e.Message}");
+        }
+        saving = false;
+    }
+
+
+
+}
