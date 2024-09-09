@@ -109,18 +109,18 @@ else {
 
     protected override async Task OnInitializedAsync()
     {
-        loading = true;
-        await LoadStudentsAsync();
-        loading = false;
-
-        // sort by name
-        students = students.OrderBy(x => x.Name).ToList();
-
-        // Check if initialization has already been performed
         var isInitialized = HttpContextAccessorService.Session.GetString("isInitialized");
+        // Check if initialization has already been performed
 
         if (string.IsNullOrEmpty(isInitialized))
         {
+            loading = true;
+            await LoadStudentsAsync();
+            loading = false;
+
+            // sort by name
+            students = students.OrderBy(x => x.Name).ToList();
+
             principalName = HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
             if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
             {
