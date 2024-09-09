@@ -1,7 +1,9 @@
 ﻿@page "/"
 
 @using Attendance.Components.Models
-
+@using Microsoft.AspNetCore.Components.Authorization
+@inject HttpContextAccessorService httpContextAccessorService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Daily attendance for @selectedDate</PageTitle>
 
@@ -29,38 +31,38 @@
 </div>
 }
 
-<table border="1">
+<div class="students" >
     @{int studentnumber = 0;}
     @for (int i = 0; i < 4; i++)
     {
-        <tr>
-            @for (int j = 0; j < 8; j++, studentnumber++)
+        @for (int j = 0; j < 8; j++, studentnumber++)
+        {
+            if (students[studentnumber].IsInactive)
             {
-                if (students[studentnumber].IsInactive)
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                var localStudentNumber = studentnumber; // Create a local copy of studentnumber
-                <td @onclick="() => TogglePresent(localStudentNumber)" style="cursor: pointer;">
-                        <img src="https://studentinfo.blob.core.windows.net/519fall2024/@(students[studentnumber].BUID).jpg" width="90" height="90" style="border: 5px solid @(students[studentnumber].Present ? "green" : "red");" />
-                    <br />
+            var localStudentNumber = studentnumber; // Create a local copy of studentnumber
+            var status = students[studentnumber].Present ? "present" : "absent";
+            <div class="student @status" @onclick="() => TogglePresent(localStudentNumber)"  >
+                <img src="https://studentinfo.blob.core.windows.net/519fall2024/@(students[studentnumber].BUID).jpg" width="90" height="90" style="border: 5px solid @(students[studentnumber].Present ? "green" : "red");" />
+                <div class="studentinfo" >
                     @students[studentnumber].Name
                     <br />
                     @students[studentnumber].BUID
-                </td>
-                if (studentnumber == students.Count - 1)
-                {
-                    break;
-                }
+                </div>
+            </div>
+            if (studentnumber == students.Count - 1)
+            {
+                break;
             }
-        </tr>
+        }
         if (studentnumber == students.Count - 1)
         {
             break;
         }
     }
-</table>
+</div>
 
 
 @code {
@@ -86,6 +88,15 @@
         // sort by name
         students = students.OrderBy(x => x.Name).ToList();
         loading = false;
+
+
+        //Console.WriteLine("Checking user permissions " + httpContextAccessorService());
+        var principalName = httpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
+        
+         Console.WriteLine ("checking user :" + principalName);
+        //if (principalName=="nagendra@bu.edu" || principalName=="langd0n@bu.edu" || principalName=="matzh@bu.edu") {
+        //    showButtons = true;
+       // }
     }
 
 //    using System.Text.Encodings.Web;
@@ -125,7 +136,7 @@
                 students = System.Text.Json.JsonSerializer.Deserialize<List<Student>>(jsonData) ?? new List<Student>();
             }
 
-            Console.WriteLine("Data loaded successfully");
+            //Console.WriteLine("Data loaded successfully");
         }
         catch (Exception e) {
             Console.WriteLine($"Error loading student data: {e.Message}");
@@ -148,9 +159,9 @@
 
             using (var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonData)))
             {
-                Console.WriteLine("Uploading data to blob storage");
+                //Console.WriteLine("Uploading data to blob storage");
                 await blobClient.UploadAsync(stream, overwrite: true);
-                Console.WriteLine("Data saved successfully");
+                //Console.WriteLine("Data saved successfully");
             }
 
         }
@@ -165,13 +176,13 @@
     private  async Task LoadStudentDataAsync(string date)
     {
         date = System.Text.Encodings.Web.UrlEncoder.Default.Encode(date) + ".json";
-        Console.WriteLine($"Loading student data for {date}");
+        //Console.WriteLine($"Loading student data for {date}");
         using (var httpClient = new HttpClient())
         {
             bool responseFound = false;
             try {
                 var blobUri = new Uri($"https://studentinfo.blob.core.windows.net/519fall2024/{date}");
-                Console.WriteLine($"Blob URI: {blobUri}");
+                //Console.WriteLine($"Blob URI: {blobUri}");
 
                 var response = await httpClient.GetAsync(blobUri.ToString());
                 
@@ -205,9 +216,9 @@
 
     void TogglePresent(int index)
     {
-        Console.WriteLine($"Index is {index}");
+        //Console.WriteLine($"Index is {index}");
         students[index].Present = !students[index].Present;
-        Console.WriteLine($"{students[index].Name} is {(students[index].Present ? "present" : "absent")}");
+        //Console.WriteLine($"{students[index].Name} is {(students[index].Present ? "present" : "absent")}");
         StateHasChanged(); // Ensure the UI is updated
     }
 
