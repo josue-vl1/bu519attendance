@@ -114,19 +114,19 @@ else {
 
         if (string.IsNullOrEmpty(isInitialized))
         {
-            loading = true;
-            await LoadStudentsAsync();
-            loading = false;
-
-            // sort by name
-            students = students.OrderBy(x => x.Name).ToList();
-
             principalName = HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
             if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
             {
                 showButtons = true;
             }
             HttpContextAccessorService.Session.SetString("isInitialized", "true");
+
+            loading = true;
+            await LoadStudentsAsync();
+            loading = false;
+
+            // sort by name
+            students = students.OrderBy(x => x.Name).ToList();
         }
         else
         {
