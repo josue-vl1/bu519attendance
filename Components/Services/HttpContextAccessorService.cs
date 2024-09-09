@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 
-namespace attendance.Components
+namespace attendance.Services
 {
     public class HttpContextAccessorService
     {
@@ -17,5 +17,6 @@ namespace attendance.Components
         {
             return _httpContextAccessor.HttpContext?.Request.Headers[headerName].ToString();
         }
+        public ISession Session => _httpContextAccessor.HttpContext?.Session;
     }
 }

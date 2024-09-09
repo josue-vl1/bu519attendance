@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Attendance.Components.Models
+namespace attendance.Components.Models
 {
     public class Student
     {

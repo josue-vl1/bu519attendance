@@ -1,9 +1,8 @@
 ﻿@page "/manage"
-@using Attendance.Components.Models
-@using Microsoft.AspNetCore.Components.Authorization
-@inject HttpContextAccessorService httpContextAccessorService
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@using attendance.Components.Models
+@using attendance.Services
 
+@inject HttpContextAccessorService HttpContextAccessorService
 
 @attribute [StreamRendering]
 
@@ -104,7 +103,6 @@ else {
     private bool saving = false;
     private bool showButtons = false;
     private string principalName = "foo";
-    private bool _isInitialized = false; // Flag to track initialization
 
     private Student newStudent = new Student();
     List<Student> students = new List<Student>();
@@ -118,15 +116,26 @@ else {
         // sort by name
         students = students.OrderBy(x => x.Name).ToList();
 
-        // Ensure the following line runs only once
-        if (!_isInitialized)
+        // Check if initialization has already been performed
+        var isInitialized = HttpContextAccessorService.Session.GetString("isInitialized");
+
+        if (string.IsNullOrEmpty(isInitialized))
         {
-            principalName = httpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
+            principalName = HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
             if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
             {
-                //showButtons = true;
+                showButtons = true;
             }
-            _isInitialized = true; // Set the flag to true after initialization
+            HttpContextAccessorService.Session.SetString("isInitialized", "true");
+        }
+        else
+        {
+            // If already initialized, set showButtons based on the principal name
+            principalName = HttpContextAccessorService.HttpContext.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"].ToString();
+            if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
+            {
+                showButtons = true;
+            }
         }
     }
 
