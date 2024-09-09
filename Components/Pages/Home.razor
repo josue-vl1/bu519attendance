@@ -7,7 +7,7 @@
 
 <PageTitle>Daily attendance for @selectedDate</PageTitle>
 
-<h4>Daily attendance for:  
+<h4>Daily attendance for:  @tempData
     <select @onchange="OnDateChanged">
         @foreach (var date in availableDates)
         {
@@ -70,7 +70,7 @@
     private string selectedDate;
     private bool loading = false;
     private bool saving = false;
-
+    private string tempData = "";
     // make a static list of dates, every monday starting on Sept 9th
     private List<DateTime> availableDates = new List<DateTime>();
 
@@ -94,6 +94,7 @@
         var principalName = httpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
         
          Console.WriteLine ("checking user :" + principalName);
+        tempData = principalName;
         //if (principalName=="nagendra@bu.edu" || principalName=="langd0n@bu.edu" || principalName=="matzh@bu.edu") {
         //    showButtons = true;
        // }
