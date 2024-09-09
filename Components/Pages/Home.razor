@@ -7,70 +7,78 @@
 
 <PageTitle>Daily attendance for @selectedDate</PageTitle>
 
-<h4>Daily attendance for:  @tempData
-    <select @onchange="OnDateChanged">
-        @foreach (var date in availableDates)
-        {
-            <option value="@date">@date.ToString("MMMM dd, yyyy")</option>
-        }
-    </select>
-    <button @onclick="() => SaveStudentDataAsync(selectedDate)">Save</button>
-</h4>
-
-@if (loading || saving)
+@if (!showButtons)
 {
-<div style="height: 85px; width: 300px; background-color: bisque; border: solid 4px black; z-index: 5; position: absolute; left: 300px; top: 200px;"> 
-    @if (loading)
-    {
-        <span>Loading...</span>
-    }
-    else if (saving)
-    {
-        <span>Saving...</span>
-    }
-</div>
+    <h1>Unauthorized</h1>
+    <p>You are not authorized to view this page.</p>
+
 }
-
-<div class="students" >
-    @{int studentnumber = 0;}
-    @for (int i = 0; i < 4; i++)
-    {
-        @for (int j = 0; j < 8; j++, studentnumber++)
-        {
-            if (students[studentnumber].IsInactive)
+else {
+    <h4>Daily attendance for:
+        <select @onchange="OnDateChanged">
+            @foreach (var date in availableDates)
             {
-                continue;
+                <option value="@date">@date.ToString("MMMM dd, yyyy")</option>
             }
+        </select>
+        <button @onclick="() => SaveStudentDataAsync(selectedDate)">Save</button>
+    </h4>
 
-            var localStudentNumber = studentnumber; // Create a local copy of studentnumber
-            var status = students[studentnumber].Present ? "present" : "absent";
-            <div class="student @status" @onclick="() => TogglePresent(localStudentNumber)"  >
-                <img src="https://studentinfo.blob.core.windows.net/519fall2024/@(students[studentnumber].BUID).jpg" width="90" height="90" style="border: 5px solid @(students[studentnumber].Present ? "green" : "red");" />
-                <div class="studentinfo" >
-                    @students[studentnumber].Name
-                    <br />
-                    @students[studentnumber].BUID
+    @if (loading || saving)
+    {
+    <div style="height: 85px; width: 300px; background-color: bisque; border: solid 4px black; z-index: 5; position: absolute; left: 300px; top: 200px;"> 
+        @if (loading)
+        {
+            <span>Loading...</span>
+        }
+        else if (saving)
+        {
+            <span>Saving...</span>
+        }
+    </div>
+    }
+
+    <div class="students" >
+        @{int studentnumber = 0;}
+        @for (int i = 0; i < 4; i++)
+        {
+            @for (int j = 0; j < 8; j++, studentnumber++)
+            {
+                if (students[studentnumber].IsInactive)
+                {
+                    continue;
+                }
+
+                var localStudentNumber = studentnumber; // Create a local copy of studentnumber
+                var status = students[studentnumber].Present ? "present" : "absent";
+                <div class="student @status" @onclick="() => TogglePresent(localStudentNumber)"  >
+                    <img src="https://studentinfo.blob.core.windows.net/519fall2024/@(students[studentnumber].BUID).jpg" width="90" height="90" style="border: 5px solid @(students[studentnumber].Present ? "green" : "red");" />
+                    <div class="studentinfo" >
+                        @students[studentnumber].Name
+                        <br />
+                        @students[studentnumber].BUID
+                    </div>
                 </div>
-            </div>
+                if (studentnumber == students.Count - 1)
+                {
+                    break;
+                }
+            }
             if (studentnumber == students.Count - 1)
             {
                 break;
             }
         }
-        if (studentnumber == students.Count - 1)
-        {
-            break;
-        }
-    }
-</div>
-
+    </div>
+}
 
 @code {
 
     private string selectedDate;
     private bool loading = false;
     private bool saving = false;
-    private string tempData = "";
+    private bool showButtons = false;
+
     // make a static list of dates, every monday starting on Sept 9th
     private List<DateTime> availableDates = new List<DateTime>();
 
@@ -93,11 +101,9 @@
         //Console.WriteLine("Checking user permissions " + httpContextAccessorService());
         var principalName = httpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
         
-         Console.WriteLine ("checking user :" + principalName);
-        tempData = principalName;
-        //if (principalName=="nagendra@bu.edu" || principalName=="langd0n@bu.edu" || principalName=="matzh@bu.edu") {
-        //    showButtons = true;
-       // }
+        if (principalName=="nagendra@bu.edu" || principalName=="langd0n@bu.edu" || principalName=="matzh@bu.edu") {
+            showButtons = true;
+        }
     }
 
 //    using System.Text.Encodings.Web;
@@ -222,37 +228,4 @@
         //Console.WriteLine($"{students[index].Name} is {(students[index].Present ? "present" : "absent")}");
         StateHasChanged(); // Ensure the UI is updated
     }
-
-    @* List<Student> students = new List<Student>
-    {
-        new Student { Name = "Celine Boudaie", BUID = "U39796772" },
-        new Student { Name = "Daniel Doh", BUID = "U77365336" },
-        new Student { Name = "Paul Martin Enano", BUID = "U75020763" },
-        new Student { Name = "Songming Fan", BUID = "U42395584" },
-        new Student { Name = "Jaimey Frank", BUID = "U50962314" },
-        new Student { Name = "Simeon Gluzman", BUID = "U99736754" },
-        new Student { Name = "Arav Hak", BUID = "U06965068" },
-        new Student { Name = "Remus Harris", BUID = "U63988079" },
-        new Student { Name = "Yadi He", BUID = "U91873499" },
-        new Student { Name = "Jasper Hoong", BUID = "U91969628" },  
-        new Student { Name = "Vittori Huang", BUID = "U32406834" },
-        new Student { Name = "Ananiya Kinfe", BUID = "U54912478" },
-        new Student { Name = "Parthiv Krishnan", BUID = "U05384866" },
-        new Student { Name = "Jida Li", BUID = "U97480525" },
-        new Student { Name = "Mingyang Li", BUID = "U87143313" },
-        new Student { Name = "Jamie Lin", BUID = "U87503854" },
-        new Student { Name = "Sarah Malik", BUID = "U12663796" },
-        new Student { Name = "Alexander Miller", BUID = "U52161825" },
-        new Student { Name = "Grace Murphy", BUID = "U52134410" },
-        new Student { Name = "Thomas Nguyen", BUID = "U20296777" },
-        new Student { Name = "Henry Price", BUID = "U02011493" },
-        new Student { Name = "Binh Tran", BUID = "U95343637" },
-        new Student { Name = "Justin Wang", BUID = "U21498925" },
-        new Student { Name = "Xin Wei", BUID = "U37607278" },
-        new Student { Name = "Josh Yip", BUID = "U38915680" },
-        new Student { Name = "Tiffany Yu", BUID = "U37806150" },
-        new Student { Name = "Brian Zeng", BUID = "U43830345" },
-        new Student { Name = "Haoran Zhang", BUID = "U66088985" },
-        new Student { Name = "Justin Zheng", BUID = "U67912393" }
-    }; *@
 };

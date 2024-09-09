@@ -1,93 +1,109 @@
 ﻿@page "/manage"
 @using Attendance.Components.Models
+@using Microsoft.AspNetCore.Components.Authorization
+@inject HttpContextAccessorService httpContextAccessorService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
 @attribute [StreamRendering]
 
 <PageTitle>Manage Students</PageTitle>
 
-<h1>Students</h1>
+@if (!showButtons)
+{
+    <h1>Unauthorized</h1>
+    <p>You are not authorized to view this page.</p>
+
+}
+else {
+    <h1>Students</h1>
 
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>BUID</th>
-            <th>Inactive</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var student in students)
-        {
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>BUID</th>
+                <th>Inactive</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var student in students)
+            {
+                <tr>
+                    <td>
+                        @if (student.IsEditing)
+                        {
+                            <input @bind="student.Name" class="form-control" />
+                        }
+                        else
+                        {
+                            @student.Name
+                        }
+                    </td>
+                    <td>
+                        @if (student.IsEditing)
+                        {
+                            <input @bind="student.BUID" class="form-control" />
+                        }
+                        else
+                        {
+                            @student.BUID
+                        }
+                    </td>
+                    <td>
+                        @if (student.IsEditing)
+                        {
+                            <input type="checkbox" @bind="student.IsInactive" />
+                        }
+                        else
+                        {
+                            <input type="checkbox" checked="@student.IsInactive" disabled />
+                        }
+                    </td>
+                    <td>
+                        <a href="#" @onclick:preventDefault @onclick="() => ToggleEdit(student)">
+                            @(student.IsEditing ? "Save" : "Edit")
+                        </a>
+                    </td>
+                </tr>
+            }
             <tr>
                 <td>
-                    @if (student.IsEditing)
-                    {
-                        <input @bind="student.Name" class="form-control" />
-                    }
-                    else
-                    {
-                        @student.Name
-                    }
+                    <input @bind="newStudent.Name" class="form-control" placeholder="New Name" />
                 </td>
                 <td>
-                    @if (student.IsEditing)
-                    {
-                        <input @bind="student.BUID" class="form-control" />
-                    }
-                    else
-                    {
-                        @student.BUID
-                    }
+                    <input @bind="newStudent.BUID" class="form-control" placeholder="New BUID" />
                 </td>
                 <td>
-                    @if (student.IsEditing)
-                    {
-                        <input type="checkbox" @bind="student.IsInactive" />
-                    }
-                    else
-                    {
-                        <input type="checkbox" checked="@student.IsInactive" disabled />
-                    }
-                </td>
-                <td>
-                    <a href="#" @onclick:preventDefault @onclick="() => ToggleEdit(student)">
-                        @(student.IsEditing ? "Save" : "Edit")
-                    </a>
+                    <button @onclick="AddStudent" class="btn btn-primary">Add</button>
                 </td>
             </tr>
-        }
-        <tr>
-            <td>
-                <input @bind="newStudent.Name" class="form-control" placeholder="New Name" />
-            </td>
-            <td>
-                <input @bind="newStudent.BUID" class="form-control" placeholder="New BUID" />
-            </td>
-            <td>
-                <button @onclick="AddStudent" class="btn btn-primary">Add</button>
-            </td>
-        </tr>
-        
-        </tbody>
-</table>
-@if (loading || saving)
-{
-<div style="height: 85px; width: 300px; background-color: bisque; border: solid 4px black; z-index: 5; position: absolute; left: 300px; top: 200px;"> 
-    @if (loading)
-    {
-        <span>Loading...</span>
-    }
-    else if (saving)
-    {
-        <span>Saving...</span>
-    }
-</div>
-}
+            
+            </tbody>
+    </table>
 
+    @if (loading || saving)
+    {
+    <div style="height: 85px; width: 300px; background-color: bisque; border: solid 4px black; z-index: 5; position: absolute; left: 300px; top: 200px;"> 
+        @if (loading)
+        {
+            <span>Loading...</span>
+        }
+        else if (saving)
+        {
+            <span>Saving...</span>
+        }
+    </div>
+    }
+
+}
 @code {
     private bool loading = false;
     private bool saving = false;
+    private bool showButtons = false;
+
     private Student newStudent = new Student();
     List<Student> students = new List<Student>();
 
@@ -100,6 +116,13 @@
         // sort by name
         students = students.OrderBy(x => x.Name).ToList();
 
+
+        //Console.WriteLine("Checking user permissions " + httpContextAccessorService());
+        var principalName = httpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
+        
+        if (principalName=="nagendra@bu.edu" || principalName=="langd0n@bu.edu" || principalName=="matzh@bu.edu") {
+            showButtons = true;
+        }
     }
 
     private void ToggleEdit(Student student)
