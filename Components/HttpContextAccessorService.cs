@@ -10,10 +10,12 @@ namespace attendance.Components
         {
             _httpContextAccessor = httpContextAccessor;
         }
+
+        public HttpContext HttpContext => _httpContextAccessor.HttpContext;
+
         public string GetHeader(string headerName)
         {
             return _httpContextAccessor.HttpContext?.Request.Headers[headerName].ToString();
         }
-        public HttpContext HttpContext => _httpContextAccessor.HttpContext;
     }
 }
