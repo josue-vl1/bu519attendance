@@ -12,6 +12,15 @@ builder.Services.AddRazorComponents()
 builder.Services.AddHttpContextAccessor(); // Register IHttpContextAccessor
 builder.Services.AddScoped<HttpContextAccessorService>(); // Register HttpContextAccessorService
 
+// Add session services
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(120); // Set session timeout
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
