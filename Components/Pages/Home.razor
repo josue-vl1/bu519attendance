@@ -74,12 +74,15 @@ else {
     </div>
 }
 
+@error
+
 @code {
 
     private string selectedDate;
     private bool loading = false;
     private bool saving = false;
     private bool showButtons = false;
+    private bool error = false;
 private string principalName = "foo";
 
     // make a static list of dates, every monday starting on Sept 9th
@@ -90,7 +93,7 @@ private string principalName = "foo";
     protected override void OnInitialized()
     {
         base.OnInitialized();
-
+try {
         var isInitialized = HttpContextAccessorService.Session.GetString("isInitialized");
         // Check if initialization has already been performed
 
@@ -113,7 +116,12 @@ private string principalName = "foo";
                 showButtons = true;
             }
         }
+    }
+catch (Exception) {
+showButtons = true;
+error  = true;
 
+}
 
         GenerateAvailableDates();
 

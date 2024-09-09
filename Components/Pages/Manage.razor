@@ -97,18 +97,23 @@ else {
     </div>
     }
 
+@error
 }
 @code {
     private bool loading = false;
     private bool saving = false;
     private bool showButtons = false;
     private string principalName = "foo";
+    private bool error = false;
+
 
     private Student newStudent = new Student();
     List<Student> students = new List<Student>();
 
     protected override async Task OnInitializedAsync()
     {
+
+try {
         var isInitialized = HttpContextAccessorService.Session.GetString("isInitialized");
         // Check if initialization has already been performed
 
@@ -131,7 +136,12 @@ else {
                 showButtons = true;
             }
         }
+    }
+catch (Exception) {
+showButtons = true;
+error  = true;
 
+}
         loading = true;
         await LoadStudentsAsync();
         loading = false;
