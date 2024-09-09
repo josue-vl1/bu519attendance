@@ -1,8 +1,9 @@
 ﻿@page "/"
 
 @using attendance.Components.Models
-@using attendance.Services // Add this line to include the namespace
-@inject HttpContextAccessorService httpContextAccessorService
+@using attendance.Services
+
+@inject HttpContextAccessorService HttpContextAccessorService
 
 
 <PageTitle>Daily attendance for @selectedDate</PageTitle>
