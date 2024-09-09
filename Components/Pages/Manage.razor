@@ -103,6 +103,7 @@ else {
     private bool loading = false;
     private bool saving = false;
     private bool showButtons = false;
+    private bool _isInitialized = false; // Flag to track initialization
 
     private Student newStudent = new Student();
     List<Student> students = new List<Student>();
@@ -116,12 +117,15 @@ else {
         // sort by name
         students = students.OrderBy(x => x.Name).ToList();
 
-
-        //Console.WriteLine("Checking user permissions " + httpContextAccessorService());
-        var principalName = httpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
-        
-        if (principalName=="nagendra@bu.edu" || principalName=="langd0n@bu.edu" || principalName=="matzh@bu.edu") {
-            showButtons = true;
+        // Ensure the following line runs only once
+        if (!_isInitialized)
+        {
+            var principalName = httpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
+            if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
+            {
+                showButtons = true;
+            }
+            _isInitialized = true; // Set the flag to true after initialization
         }
     }
 
