@@ -16,6 +16,7 @@
 else {
     <h4>Daily attendance for:
         <select @onchange="OnDateChanged">
+            <option value="">Select a date</option>
             @foreach (var date in availableDates)
             {
                 <option value="@date">@date.ToString("MMMM dd, yyyy")</option>
@@ -59,6 +60,10 @@ else {
                         @students[studentnumber].Name
                         <br />
                         @students[studentnumber].BUID
+                        @if (students[studentnumber].Present)
+                        {
+                            <input type="checkbox" @bind="students[studentnumber].Exempt" /> //Exempt
+                        }
                     </div>
                 </div>
                 if (studentnumber == students.Count - 1)
@@ -73,17 +78,18 @@ else {
         }
     </div>
 }
-
+<hr>
 @error
+Date: @selectedDate
 
 @code {
 
     private string selectedDate;
     private bool loading = false;
     private bool saving = false;
-    private bool showButtons = false;
-    private bool error = false;
-private string principalName = "foo";
+    private bool showButtons = true;
+    private string error = "";
+    private string principalName = "foo";
 
     // make a static list of dates, every monday starting on Sept 9th
     private List<DateTime> availableDates = new List<DateTime>();
@@ -93,35 +99,37 @@ private string principalName = "foo";
     protected override void OnInitialized()
     {
         base.OnInitialized();
-try {
-        var isInitialized = HttpContextAccessorService.Session.GetString("isInitialized");
-        // Check if initialization has already been performed
 
-        if (string.IsNullOrEmpty(isInitialized))
-        {
-            principalName = HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
-            if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
-            {
-                showButtons = true;
+        try {
+                var isInitialized = HttpContextAccessorService.Session.GetString("isInitialized");
+                // Check if initialization has already been performed
+
+                if (string.IsNullOrEmpty(isInitialized))
+                {
+                    principalName = HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
+                    if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
+                    {
+                        showButtons = true;
+                    }
+                    HttpContextAccessorService.Session.SetString("isInitialized", principalName);
+
+                }
+                else
+                {
+                    // If already initialized, set showButtons based on the principal name
+                    principalName = HttpContextAccessorService.HttpContext.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"].ToString();
+                    if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
+                    {
+                        showButtons = true;
+                    }
+                }
             }
-            HttpContextAccessorService.Session.SetString("isInitialized", principalName);
+        catch (Exception e) {
+            showButtons = true;
 
+            // Set the error message
+            error  = e.Message;
         }
-        else
-        {
-            // If already initialized, set showButtons based on the principal name
-            principalName = HttpContextAccessorService.HttpContext.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"].ToString();
-            if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
-            {
-                showButtons = true;
-            }
-        }
-    }
-catch (Exception) {
-showButtons = true;
-error  = true;
-
-}
 
         GenerateAvailableDates();
 
@@ -175,6 +183,7 @@ error  = true;
         }
         catch (Exception e) {
             Console.WriteLine($"Error loading student data: {e.Message}");
+            error= e.Message;
         }
     }
 

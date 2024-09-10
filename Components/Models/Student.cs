@@ -7,6 +7,8 @@ namespace attendance.Components.Models
         public string Name { get; set; }
         public string BUID { get; set; }
         public bool Present { get; set; }
+        [JsonIgnore]
+        public bool Exempt { get; set; }
         public bool IsInactive { get; set; } = false; // New property to track active state, default to true
 
         [JsonIgnore]
