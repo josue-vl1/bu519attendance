@@ -39,48 +39,52 @@ else {
     </div>
     }
 
-    <div class="students" >
-        @{int studentnumber = 0;}
-        @for (int i = 0; i < 4; i++)
-        {
-            @for (int j = 0; j < 8; j++, studentnumber++)
+    @if (showStudents) 
+    {
+        <div class="students" >
+            @{int studentnumber = 0;}
+            @for (int i = 0; i < 4; i++)
             {
-                if (students[studentnumber].IsInactive)
+                @for (int j = 0; j < 8; j++, studentnumber++)
                 {
-                    continue;
-                }
+                    if (students[studentnumber].IsInactive)
+                    {
+                        continue;
+                    }
 
-                var localStudentNumber = studentnumber; // Create a local copy of studentnumber
-                var status = students[studentnumber].Present ? "present" : "absent";
-                var deco = students[studentnumber].Present ? "style=\"border: 5px solid green\"" : "";
-                <div class="student @status" @onclick="() => TogglePresent(localStudentNumber)"  >
-                    <img src="https://studentinfo.blob.core.windows.net/519fall2024/@(students[studentnumber].BUID).jpg" width="90" height="90"
-                     style="@(students[studentnumber].Present ? "border: 5px solid green" : "");" />
-                    <div class="studentinfo" >
-                        @students[studentnumber].Name
-                        <br />
-                        @students[studentnumber].BUID
-                        @if (students[studentnumber].Present)
-                        {
-                            <input type="checkbox" @bind="students[studentnumber].Exempt" /> //Exempt
-                        }
+                    var localStudentNumber = studentnumber; // Create a local copy of studentnumber
+                    var status = students[studentnumber].Present ? "present" : "absent";
+                    var deco = students[studentnumber].Present ? "style=\"border: 5px solid green\"" : "";
+                    <div class="student @status" @onclick="() => TogglePresent(localStudentNumber)"  >
+                        <img src="https://studentinfo.blob.core.windows.net/519fall2024/@(students[studentnumber].BUID).jpg" width="90" height="90"
+                        style="@(students[studentnumber].Present ? "border: 5px solid green" : "");" />
+                        <div class="studentinfo" >
+                            @students[studentnumber].Name
+                            <br />
+                            @students[studentnumber].BUID
+                            @if (students[studentnumber].Present)
+                            {
+                                <input type="checkbox" @bind="students[studentnumber].Exempt" /> //Exempt
+                            }
+                        </div>
                     </div>
-                </div>
+                    if (studentnumber == students.Count - 1)
+                    {
+                        break;
+                    }
+                }
                 if (studentnumber == students.Count - 1)
                 {
                     break;
                 }
             }
-            if (studentnumber == students.Count - 1)
-            {
-                break;
-            }
-        }
-    </div>
+        </div>
+    }
 }
 <hr>
+<div class="error">
 @error
-Date: @selectedDate
+</div>
 
 @code {
 
@@ -88,6 +92,7 @@ Date: @selectedDate
     private bool loading = false;
     private bool saving = false;
     private bool showButtons = true;
+    private bool showStudents = false;
     private string error = "";
     private string principalName = "foo";
 
@@ -219,6 +224,7 @@ Date: @selectedDate
     // Load student attence data from blob storage
     private  async Task LoadStudentDataAsync(string date)
     {
+        showStudents = false;
         date = System.Text.Encodings.Web.UrlEncoder.Default.Encode(date) + ".json";
         //Console.WriteLine($"Loading student data for {date}");
         using (var httpClient = new HttpClient())
@@ -244,6 +250,8 @@ Date: @selectedDate
                         }
                     }
                 }
+
+                showStudents = true;
             }
             catch (Exception e) {
                 Console.WriteLine($"Error loading student data: {e.Message}");

@@ -38,3 +38,8 @@
 .present img {
     border: 5px solid green;
 }
+
+.error {
+    color: slategray;
+}
+
