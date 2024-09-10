@@ -64,7 +64,7 @@ else {
                             @students[studentnumber].BUID
                             @if (students[studentnumber].Present)
                             {
-                                <div>
+                                <div @onclick:stopPropagation  @onclick="() => ToggleExempt(localStudentNumber)">
                                     <input type="checkbox" @bind="students[studentnumber].Exempt" /> 
                                     Exempt
                                 </div>
@@ -168,7 +168,7 @@ else {
             return;
         }
 
-Console.WriteLine($"Selected date: {e.Value}   {selectedDate}");
+//Console.WriteLine($"Selected date: {e.Value}   {selectedDate}");
         loading = true;
         StateHasChanged();
         await LoadStudentDataAsync(selectedDate);
@@ -208,8 +208,8 @@ Console.WriteLine($"Selected date: {e.Value}   {selectedDate}");
         var blobUri = new Uri($"https://studentinfo.blob.core.windows.net/519fall2024/{date}");
 
         try {
-            var jsonData = System.Text.Json.JsonSerializer.Serialize(students.Select(x => new StudentData { BUID = x.BUID, Present = x.Present }).ToList());
-
+            var jsonData = System.Text.Json.JsonSerializer.Serialize(students.Select(x => new StudentData { BUID = x.BUID, Present = x.Present, Exempt=x.Exempt }).ToList());
+//Console.WriteLine("Data to save: " + jsonData); 
             var credential = new Azure.Identity.DefaultAzureCredential();
             var blobClient = new Azure.Storage.Blobs.BlobClient(blobUri, credential);
 
@@ -253,6 +253,7 @@ Console.WriteLine($"Selected date: {e.Value}   {selectedDate}");
                             var index = students.FindIndex(x => x.BUID == student.BUID);
                             if (index != -1) {
                                 students[index].Present = student.Present;
+                                students[index].Exempt = student.Exempt;
                             }
                         }
                     }
@@ -272,7 +273,6 @@ Console.WriteLine($"Selected date: {e.Value}   {selectedDate}");
         }
     }
 
-
     void TogglePresent(int index)
     {
         //Console.WriteLine($"Index is {index}");
@@ -280,4 +280,10 @@ Console.WriteLine($"Selected date: {e.Value}   {selectedDate}");
         //Console.WriteLine($"{students[index].Name} is {(students[index].Present ? "present" : "absent")}");
         StateHasChanged(); // Ensure the UI is updated
     }
+    void ToggleExempt(int index)
+    {
+        students[index].Exempt = !students[index].Exempt;
+        StateHasChanged(); // Ensure the UI is updated
+    }
+    
 };
