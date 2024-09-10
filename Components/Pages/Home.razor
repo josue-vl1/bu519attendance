@@ -64,7 +64,7 @@ else {
                             @students[studentnumber].BUID
                             @if (students[studentnumber].Present)
                             {
-                                <div @onclick:stopPropagation  @onclick="() => ToggleExempt(localStudentNumber)">
+                                <div class="exempt" @onclick:stopPropagation  @onclick="() => ToggleExempt(localStudentNumber)">
                                     <input type="checkbox" @bind="students[studentnumber].Exempt" /> 
                                     Exempt
                                 </div>
