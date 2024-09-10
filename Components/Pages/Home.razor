@@ -64,7 +64,11 @@ else {
                             @students[studentnumber].BUID
                             @if (students[studentnumber].Present)
                             {
-                                <input type="checkbox" @bind="students[studentnumber].Exempt" /> //Exempt
+                                <div>
+                                    <input type="checkbox" @bind="students[studentnumber].Exempt" /> 
+                                    Exempt
+                                </div>
+                                    
                             }
                         </div>
                     </div>
@@ -81,17 +85,14 @@ else {
         </div>
     }
 }
-<hr>
-<div class="error">
-@error
-</div>
+
 
 @code {
 
     private string selectedDate;
     private bool loading = false;
     private bool saving = false;
-    private bool showButtons = true;
+    private bool showButtons = false;
     private bool showStudents = false;
     private string error = "";
     private string principalName = "foo";
@@ -162,6 +163,12 @@ else {
         if (e == null || e.Value == null) selectedDate = availableDates[0].ToString("yyyy-MM-dd");
         else selectedDate = e.Value.ToString();
 
+        if (selectedDate == null || selectedDate == "")  {
+            showStudents = false;
+            return;
+        }
+
+Console.WriteLine($"Selected date: {e.Value}   {selectedDate}");
         loading = true;
         StateHasChanged();
         await LoadStudentDataAsync(selectedDate);
