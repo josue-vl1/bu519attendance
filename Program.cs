@@ -12,6 +12,12 @@ builder.Host.ConfigureLogging(logging =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddHttpContextAccessor(); // Register IHttpContextAccessor
+services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear(); // Clear the default networks
+    options.KnownProxies.Clear(); // Clear the default proxies
+});
 //builder.Services.AddScoped<HttpContextAccessorService>(); // Register HttpContextAccessorService
 
 // Add session services
