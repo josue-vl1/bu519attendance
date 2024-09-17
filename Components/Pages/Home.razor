@@ -2,9 +2,11 @@
 
 @using attendance.Components.Models
 @using attendance.Services
+@inject IHttpContextAccessor httpContextAccessor;
 
+@*
 @inject HttpContextAccessorService HttpContextAccessorService
-
+*@
 
 <PageTitle>Daily attendance for @selectedDate</PageTitle>
 
@@ -112,9 +114,11 @@ else
     {
         if (firstRender)
         {
-            await ProtectedSessionStore.SetAsync("user", HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME"));
+            //await ProtectedSessionStore.SetAsync("user", HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME"));
+            principalName = httpContextAccessor.HttpContext.Request.Headers["x-MS-CLIENT-PRINCIPAL-NAME"];
+            await ProtectedSessionStore.SetAsync("user", principalName);
             Console.WriteLine ( "First render");
-            principalName = HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
+            //principalName = HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
 @* 
             try
             {

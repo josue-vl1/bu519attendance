@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddHttpContextAccessor(); // Register IHttpContextAccessor
-builder.Services.AddScoped<HttpContextAccessorService>(); // Register HttpContextAccessorService
+//builder.Services.AddScoped<HttpContextAccessorService>(); // Register HttpContextAccessorService
 
 // Add session services
 builder.Services.AddDistributedMemoryCache();
