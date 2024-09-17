@@ -19,6 +19,7 @@ namespace attendance.Services
         }
 
         public string AllHeaders() {
+            
             if (_httpContextAccessor.HttpContext?.Request.Headers == null)
             {
                 return "No headers available";
