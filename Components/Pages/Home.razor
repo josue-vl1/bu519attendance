@@ -150,8 +150,12 @@ else
                     error = e.Message;
 
                 // Log all headers
+                try {
                     var allHeaders = string.Join(", ", HttpContextAccessorService.HttpContext.Request.Headers.Select(h => $"{h.Key}: {h.Value}"));
                     error = $"Session: {HttpContextAccessorService.Session.GetString("isInitialized")}, Headers: {allHeaders}";
+                    } catch (Exception) {
+                        error = "not able to get headers";
+                    }
             }
 
             GenerateAvailableDates();
