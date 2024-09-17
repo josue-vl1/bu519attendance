@@ -1,9 +1,3 @@
-using attendance.Components;
-using attendance.Services;
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.Extensions.DependencyInjection;
-using System.Text;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -32,11 +26,11 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 app.UseAntiforgery();
 
 app.UseSession(); // Add session middleware
+app.UseRouting(); // Add UseRouting before MapRazorComponents
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
