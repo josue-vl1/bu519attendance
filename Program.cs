@@ -2,6 +2,11 @@ using attendance.Components;
 using attendance.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.ConfigureLogging(logging =>
+{
+    logging.ClearProviders();
+    logging.AddConsole();
+});
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

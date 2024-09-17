@@ -15,6 +15,7 @@
     <h1>Unauthorized</h1>
     <p>You are not authorized to view this page.  @principalName</p>
     @error
+    @allHeaders
 }
 else
 {
@@ -101,6 +102,7 @@ else
     private bool saving = false;
     private bool showButtons = false;
     private bool showStudents = false;
+    private string allHeaders;
     private string error = "";
     private string principalName = "foo";
     private bool pageIsInitialized = false; // Flag to track initialization
@@ -114,10 +116,12 @@ else
     {
         if (firstRender)
         {
+            allHeaders = string.Join(", ", httpContextAccessor.HttpContext.Request.Headers.Select(h => $"{h.Key}: {h.Value}"));
+
             //await ProtectedSessionStore.SetAsync("user", HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME"));
             principalName = httpContextAccessor.HttpContext.Request.Headers["x-MS-CLIENT-PRINCIPAL-NAME"];
             await ProtectedSessionStore.SetAsync("user", principalName);
-            Console.WriteLine ( "First render");
+            Console.WriteLine ( "First render " + allHeaders);
             //principalName = HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
 @* 
             try
@@ -175,6 +179,8 @@ else
             // sort by name
             students = students.OrderBy(x => x.Name).ToList();
             loading = false;
+
+            StateHasChanged();
         } else {
 
             Console.WriteLine ( "Second  render");
