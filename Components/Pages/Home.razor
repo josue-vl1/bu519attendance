@@ -4,9 +4,9 @@
 @using attendance.Services
 @inject IHttpContextAccessor httpContextAccessor;
 
-@*
+
 @inject HttpContextAccessorService HttpContextAccessorService
-*@
+
 
 <PageTitle>Daily attendance for @selectedDate</PageTitle>
 
@@ -120,15 +120,16 @@ else
         if (firstRender)
         {
             try {
+            principalName=    HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
             allHeaders = string.Join(", ", httpContextAccessor.HttpContext.Request.Headers.Select(h => $"{h.Key}: {h.Value}"));
-            principalName = httpContextAccessor.HttpContext.Request.Headers["x-MS-CLIENT-PRINCIPAL-NAME"];
+            //principalName = httpContextAccessor.HttpContext.Request.Headers["x-MS-CLIENT-PRINCIPAL-NAME"];
 }  catch (Exception e) {
     logger.LogError(e, "getting headers");
     allHeaders = e.Message;
 
-    allHeaders += httpContextAccessor is null ? " accessor is null " : "accessor is not null ";
+    allHeaders += HttpContextAccessorService is null ? " accessor is null " : "accessor is not null ";
 
-    allHeaders += httpContextAccessor.HttpContext is null ? " context  is null " : "context is not null ";
+    allHeaders += HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME") is null ? " context  is null " : "context is not null ";
 
 
 }

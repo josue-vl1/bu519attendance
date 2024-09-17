@@ -18,7 +18,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownNetworks.Clear(); // Clear the default networks
     options.KnownProxies.Clear(); // Clear the default proxies
 });
-//builder.Services.AddScoped<HttpContextAccessorService>(); // Register HttpContextAccessorService
+builder.Services.AddScoped<HttpContextAccessorService>(); // Register HttpContextAccessorService
 
 // Add session services
 builder.Services.AddDistributedMemoryCache();
