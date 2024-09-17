@@ -55,5 +55,4 @@ app.UseAntiforgery(); // Add UseAntiforgery after UseRouting
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-
 app.Run();
