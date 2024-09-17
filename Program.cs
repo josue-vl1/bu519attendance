@@ -19,8 +19,8 @@ builder.Services.AddSession(options =>
 });
 
 // Add Application Insights
-builder.Services.AddApplicationInsightsTelemetry(builder.Configuration["ApplicationInsights:InstrumentationKey"]);
-
+builder.Services.AddApplicationInsightsTelemetry("7ca9bdd1-32ad-4e0e-8cbf-d96b7a6383ad");
+builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 
