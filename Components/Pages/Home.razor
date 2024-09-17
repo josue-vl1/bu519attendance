@@ -101,7 +101,7 @@ else
     private bool showStudents = false;
     private string error = "";
     private string principalName = "foo";
-    private bool isInitialized = false; // Flag to track initialization
+    private bool pageIsInitialized = false; // Flag to track initialization
 
     // make a static list of dates, every monday starting on Sept 9th
     private List<DateTime> availableDates = new List<DateTime>();
@@ -110,7 +110,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        if (!isInitialized)
+        if (!pageIsInitialized)
         {
             try
             {
@@ -136,7 +136,7 @@ else
                         showButtons = true;
                     }
                 }
-                isInitialized = true; // Set the flag to true after initialization
+                pageIsInitialized = true; // Set the flag to true after initialization
             }
             catch (Exception e)
             {
