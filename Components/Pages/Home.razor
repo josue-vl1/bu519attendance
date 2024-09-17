@@ -112,6 +112,9 @@ else
     {
         if (firstRender)
         {
+            await ProtectedSessionStore.SetAsync("user", HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME"));
+            Console.WriteLine ( "First render");
+@* 
             try
             {
                 var isInitialized = HttpContextAccessorService.Session.GetString("isInitialized");
@@ -156,7 +159,7 @@ else
                     } catch (Exception) {
                         error = "not able to get headers";
                     }
-            }
+            } *@
 
             GenerateAvailableDates();
 
@@ -167,6 +170,8 @@ else
             // sort by name
             students = students.OrderBy(x => x.Name).ToList();
             loading = false;
+        } else {
+            var principalName = await ProtectedSessionStore.GetAsync<string>("user");
         }
     }
 
