@@ -18,6 +18,10 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// Add Application Insights
+builder.Services.AddApplicationInsightsTelemetry(builder.Configuration["ApplicationInsights:InstrumentationKey"]);
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
