@@ -134,7 +134,7 @@ else {
         catch (Exception e) {
             showButtons = false;
 
-            if (HttpContextAccessorService.Session)
+            if (HttpContextAccessorService.Session != null)
                 error = "Session exists";
             else
 
