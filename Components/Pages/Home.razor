@@ -124,6 +124,7 @@ else
             principalName = httpContextAccessor.HttpContext.Request.Headers["x-MS-CLIENT-PRINCIPAL-NAME"];
 }  catch (Exception e) {
     logger.LogError(e, "getting headers");
+    allHeaders = e.Message;
 }
             //await ProtectedSessionStore.SetAsync("user", HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME"));
             await ProtectedSessionStore.SetAsync("user", principalName);
