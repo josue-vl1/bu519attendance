@@ -128,6 +128,8 @@ else
 
     allHeaders += httpContextAccessor is null ? " accessor is null " : "accessor is not null ";
 
+    allHeaders += httpContextAccessor.HttpContext is null ? " context  is null " : "context is not null ";
+
 
 }
             //await ProtectedSessionStore.SetAsync("user", HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME"));
