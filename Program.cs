@@ -30,12 +30,15 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseAntiforgery();
+
+app.UseRouting(); // Add UseRouting before UseAntiforgery
 
 app.UseSession(); // Add session middleware
-app.UseRouting(); // Add UseRouting before MapRazorComponents
+
+app.UseAntiforgery(); // Add UseAntiforgery after UseRouting
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
 
 app.Run();
