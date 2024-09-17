@@ -114,6 +114,7 @@ else
         {
             await ProtectedSessionStore.SetAsync("user", HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME"));
             Console.WriteLine ( "First render");
+            principalName = HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
 @* 
             try
             {
