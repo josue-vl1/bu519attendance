@@ -125,6 +125,10 @@ else
 }  catch (Exception e) {
     logger.LogError(e, "getting headers");
     allHeaders = e.Message;
+
+    allHeaders += httpContextAccessor is null ? " accessor is null " : "accessor is not null ";
+
+
 }
             //await ProtectedSessionStore.SetAsync("user", HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME"));
             await ProtectedSessionStore.SetAsync("user", principalName);
