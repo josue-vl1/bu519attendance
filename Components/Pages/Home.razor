@@ -174,7 +174,8 @@ else
 
             Console.WriteLine ( "Second  render");
 
-            principalName = await ProtectedSessionStore.GetAsync<string>("user");
+            var result = await ProtectedSessionStore.GetAsync<string>("user");
+            principalName = result.Success ? result.Value : "defaultUser";
         }
     }
 
