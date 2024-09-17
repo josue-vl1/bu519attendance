@@ -108,9 +108,9 @@ else
 
     List<Student> students = new List<Student>();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!pageIsInitialized)
+        if (firstRender)
         {
             try
             {
