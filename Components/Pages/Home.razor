@@ -114,12 +114,18 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+
+        var logger = LoggerFactory.CreateLogger<Home>();
+
         if (firstRender)
         {
+            try {
             allHeaders = string.Join(", ", httpContextAccessor.HttpContext.Request.Headers.Select(h => $"{h.Key}: {h.Value}"));
-
-            //await ProtectedSessionStore.SetAsync("user", HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME"));
             principalName = httpContextAccessor.HttpContext.Request.Headers["x-MS-CLIENT-PRINCIPAL-NAME"];
+}  catch (Exception e) {
+    logger.LogError(e, "getting headers");
+}
+            //await ProtectedSessionStore.SetAsync("user", HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME"));
             await ProtectedSessionStore.SetAsync("user", principalName);
             Console.WriteLine ( "First render " + allHeaders);
             //principalName = HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
