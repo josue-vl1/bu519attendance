@@ -1,5 +1,8 @@
 using attendance.Components;
 using attendance.Services;
+using Microsoft.AspNetCore.Components.Server.Circuits;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text;
@@ -20,8 +23,12 @@ builder.Logging.AddFilter<ApplicationInsightsLoggerProvider>("*", LogLevel.Trace
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-builder.Services.AddHttpContextAccessor(); // Register IHttpContextAccessor
-builder.Services.AddScoped<HttpContextAccessorService>(); // Register HttpContextAccessorService
+builder.Services.TryAddEnumerable(
+    ServiceDescriptor.Scoped<CircuitHandler, BlazorNonceService>(sp => sp.GetRequiredService<BlazorNonceService>()));
+
+builder.Services.AddScoped<BlazorNonceService>();
+//builder.Services.AddHttpContextAccessor(); // Register IHttpContextAccessor
+//builder.Services.AddScoped<HttpContextAccessorService>(); // Register HttpContextAccessorService
 
 // Add Application Insights telemetry services
 builder.Services.AddApplicationInsightsTelemetry(options =>

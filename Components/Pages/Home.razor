@@ -2,11 +2,9 @@
 
 @using attendance.Components.Models
 @using attendance.Services
-@inject IHttpContextAccessor httpContextAccessor;
+@inject BlazorNonceService BlazorNonceService
 
-
-@inject HttpContextAccessorService HttpContextAccessorService
-
+[CascadingParameter] UserContext UserContext { get; set; }
 
 <PageTitle>Daily attendance for @selectedDate</PageTitle>
 
@@ -16,6 +14,9 @@
     <p>You are not authorized to view this page.  @principalName</p>
     @error
     @allHeaders
+    <p>The nonce value is 
+    <code>@BlazorNonceService.Nonce</code>
+</p>
 }
 else
 {
@@ -119,23 +120,24 @@ else
 
         if (true)
         {
-            try {
-            principalName=    HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
-            allHeaders = string.Join(", ", httpContextAccessor.HttpContext.Request.Headers.Select(h => $"{h.Key}: {h.Value}"));
+            
+
+            principalName= "fb";//   HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
+            //allHeaders = string.Join(", ", BlazorNonceService.HttpContext.Request.Headers.Select(h => $"{h.Key}: {h.Value}"));
             //principalName = httpContextAccessor.HttpContext.Request.Headers["x-MS-CLIENT-PRINCIPAL-NAME"];
-}  catch (Exception e) {
+
     //logger.LogError(e, "getting headers");
-    allHeaders += e.Message;
+    //allHeaders += e.Message;
 
-    allHeaders += HttpContextAccessorService is null ? " accessor is null " : "accessor is not null ";
+    //allHeaders += BlazorNonceService is null ? " accessor is null " : "accessor is not null ";
 
-    allHeaders += HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME") is null ? " context  is null " : "context is not null ";
+    //allHeaders += BlazorNonceService.Context is null ? " context  is null " : "context is not null ";
 
-    allHeaders += "    " + HttpContextAccessorService.AllHeaders();
+//    allHeaders += "    " + HttpContextAccessorService.AllHeaders();
 
-}
+
             //await ProtectedSessionStore.SetAsync("user", HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME"));
-            await ProtectedSessionStore.SetAsync("user", principalName);
+            //await ProtectedSessionStore.SetAsync("user", principalName);
             Console.WriteLine ( "First render " + allHeaders);
             //principalName = HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
 @* 
