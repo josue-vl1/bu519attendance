@@ -50,7 +50,7 @@ app.UseRouting(); // Add UseRouting before UseAntiforgery
 
 app.UseSession(); // Add session middleware
 
-app.UseAntiforgery(); // Add UseAntiforgery after UseRouting
+//app.UseAntiforgery(); // Add UseAntiforgery after UseRouting
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
