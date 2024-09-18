@@ -1,8 +1,7 @@
 ﻿@page "/manage"
 @using attendance.Components.Models
 @using attendance.Services
-
-@inject HttpContextAccessorService HttpContextAccessorService
+@inject BlazorNonceService BlazorNonceService
 
 @attribute [StreamRendering]
 
@@ -110,42 +109,19 @@ else {
 
     protected override async Task OnInitializedAsync()
     {
-
-try {
-        var isInitialized = HttpContextAccessorService.Session.GetString("isInitialized");
-        // Check if initialization has already been performed
-
-        if (string.IsNullOrEmpty(isInitialized))
+        principalName= BlazorNonceService.Nonce; 
+        if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
         {
-            principalName = HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
-            if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
-            {
-                showButtons = true;
-            }
-            HttpContextAccessorService.Session.SetString("isInitialized", principalName);
-
+            showButtons = true;
         }
-        else
-        {
-            // If already initialized, set showButtons based on the principal name
-            principalName = HttpContextAccessorService.HttpContext.Request.Headers["X-MS-CLIENT-PRINCIPAL-NAME"].ToString();
-            if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
-            {
-                showButtons = true;
-            }
-        }
-    }
-catch (Exception) {
-showButtons = true;
-error  = true;
 
-}
         loading = true;
         await LoadStudentsAsync();
         loading = false;
 
         // sort by name
         students = students.OrderBy(x => x.Name).ToList();
+        StateHasChanged();
     }
 
     private void ToggleEdit(Student student)
