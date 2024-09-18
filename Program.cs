@@ -12,12 +12,12 @@ builder.Host.ConfigureLogging(logging =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddHttpContextAccessor(); // Register IHttpContextAccessor
-//builder.Services.Configure<ForwardedHeadersOptions>(options =>
-//{
-//    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
-//    options.KnownNetworks.Clear(); // Clear the default networks
-//    options.KnownProxies.Clear(); // Clear the default proxies
-//});
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear(); // Clear the default networks
+    options.KnownProxies.Clear(); // Clear the default proxies
+});
 builder.Services.AddScoped<HttpContextAccessorService>(); // Register HttpContextAccessorService
 
 // Add session services
@@ -30,8 +30,8 @@ builder.Services.AddSession(options =>
 });
 
 // Add Application Insights
-//builder.Services.AddApplicationInsightsTelemetry("7ca9bdd1-32ad-4e0e-8cbf-d96b7a6383ad");
-//builder.Services.AddMemoryCache();
+builder.Services.AddApplicationInsightsTelemetry("7ca9bdd1-32ad-4e0e-8cbf-d96b7a6383ad");
+builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 
@@ -50,9 +50,10 @@ app.UseRouting(); // Add UseRouting before UseAntiforgery
 
 app.UseSession(); // Add session middleware
 
-//app.UseAntiforgery(); // Add UseAntiforgery after UseRouting
+app.UseAntiforgery(); // Add UseAntiforgery after UseRouting
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
 
 app.Run();
