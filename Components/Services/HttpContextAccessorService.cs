@@ -9,12 +9,14 @@ namespace attendance.Services
         public HttpContextAccessorService(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
+            Console.WriteLine("got a context");
         }
 
         public HttpContext HttpContext => _httpContextAccessor.HttpContext;
 
         public string GetHeader(string headerName)
         {
+            Console.WriteLine("Tyring to read header: " + headerName);
             return _httpContextAccessor.HttpContext?.Request.Headers[headerName].ToString();
         }
 

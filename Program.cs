@@ -1,5 +1,8 @@
 using attendance.Components;
 using attendance.Services;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.DependencyInjection;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureLogging(logging =>
@@ -12,12 +15,12 @@ builder.Host.ConfigureLogging(logging =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddHttpContextAccessor(); // Register IHttpContextAccessor
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
-    options.KnownNetworks.Clear(); // Clear the default networks
-    options.KnownProxies.Clear(); // Clear the default proxies
-});
+// builder.Services.Configure<ForwardedHeadersOptions>(options =>
+// {
+//     options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+//     options.KnownNetworks.Clear(); // Clear the default networks
+//     options.KnownProxies.Clear(); // Clear the default proxies
+// });
 builder.Services.AddScoped<HttpContextAccessorService>(); // Register HttpContextAccessorService
 
 // Add session services
