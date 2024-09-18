@@ -98,6 +98,7 @@ else {
 
 @code {
     private bool loading = false;
+    private string classname="";
     private bool saving = false;
     private bool showButtons = false;
     private string principalName = "foo";
@@ -113,7 +114,10 @@ else {
         if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
         {
             showButtons = true;
+            classname = "519fall2024";
         }
+        else
+          return;
 
         loading = true;
         await LoadStudentsAsync();
@@ -145,7 +149,7 @@ else {
 
     private async Task LoadStudentsAsync()
     {
-        var blobUri = new Uri($"https://studentinfo.blob.core.windows.net/519fall2024/students.json");
+        var blobUri = new Uri($"https://studentinfo.blob.core.windows.net/{classname}/students.json");
 
         try {
             var credential = new Azure.Identity.DefaultAzureCredential();
@@ -170,7 +174,7 @@ else {
         saving = true;
         var jsonData = System.Text.Json.JsonSerializer.Serialize(students);
 
-        var blobUri = new Uri($"https://studentinfo.blob.core.windows.net/519fall2024/students.json");
+        var blobUri = new Uri($"https://studentinfo.blob.core.windows.net/{classname}/students.json");
 
         try {
             var credential = new Azure.Identity.DefaultAzureCredential();
