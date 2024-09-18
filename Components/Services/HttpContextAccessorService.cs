@@ -16,8 +16,16 @@ namespace attendance.Services
 
         public string GetHeader(string headerName)
         {
-            Console.WriteLine("Tyring to read header: " + headerName);
-            return _httpContextAccessor.HttpContext?.Request.Headers[headerName].ToString();
+            try {
+                var val = _httpContextAccessor.HttpContext.Request.Headers[headerName].ToString();
+                if (val == null || val.Length == 0) {
+                    return "unknown";
+                }
+                return val;
+            } catch ( Exception e) {
+                Console.WriteLine("Error reading header: " + e.Message);
+                return "unknown";
+            }
         }
 
         public string AllHeaders() {

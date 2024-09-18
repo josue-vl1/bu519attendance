@@ -40,7 +40,8 @@
             return nonce;
         }else
         {
-            nonce = HttpContextAccessorService.AllHeaders();
+            nonce = HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
+            Console.WriteLine("Nonce: " + nonce);
             Context.Items["nonce"] = nonce;
 
             return nonce;
