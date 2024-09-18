@@ -1,22 +1,14 @@
-﻿@page "/"
+﻿﻿@page "/"
 
 @using attendance.Components.Models
 @using attendance.Services
-@inject IHttpContextAccessor HttpContextAccessor
+@inject IHttpContextAccessor httpContextAccessor;
 
 
 @inject HttpContextAccessorService HttpContextAccessorService
 
 
 <PageTitle>Daily attendance for @selectedDate</PageTitle>
-
-<h3>Request Headers</h3>
-<ul>
-    @foreach (var header in HttpContextAccessor.HttpContext.Request.Headers)
-    {
-        <li>@header.Key: @header.Value</li>
-    }
-</ul>
 
 @if (!showButtons)
 {
@@ -105,8 +97,6 @@ else
 
 @code {
 
-    //private     headers = HttpContextAccessor.HttpContext?.Request.Headers;
-
     private string selectedDate;
     private bool loading = false;
     private bool saving = false;
@@ -130,16 +120,12 @@ else
         if (firstRender)
         {
             try {
-
-                
             principalName=    HttpContextAccessorService.GetHeader("X-MS-CLIENT-PRINCIPAL-NAME");
-            allHeaders = string.Join(", ", HttpContextAccessor.HttpContext.Request.Headers.Select(h => $"{h.Key}: {h.Value}"));
+            allHeaders = string.Join(", ", httpContextAccessor.HttpContext.Request.Headers.Select(h => $"{h.Key}: {h.Value}"));
             //principalName = httpContextAccessor.HttpContext.Request.Headers["x-MS-CLIENT-PRINCIPAL-NAME"];
 }  catch (Exception e) {
     logger.LogError(e, "getting headers");
     allHeaders = e.Message;
-
-    //allHeaders += HttpContext.Request is null ? "its real ---" : " its not real --- ";
 
     allHeaders += HttpContextAccessorService is null ? " accessor is null " : "accessor is not null ";
 
