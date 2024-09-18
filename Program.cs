@@ -27,8 +27,8 @@ builder.Services.TryAddEnumerable(
     ServiceDescriptor.Scoped<CircuitHandler, BlazorNonceService>(sp => sp.GetRequiredService<BlazorNonceService>()));
 
 builder.Services.AddScoped<BlazorNonceService>();
-//builder.Services.AddHttpContextAccessor(); // Register IHttpContextAccessor
-//builder.Services.AddScoped<HttpContextAccessorService>(); // Register HttpContextAccessorService
+builder.Services.AddHttpContextAccessor(); // Register IHttpContextAccessor
+builder.Services.AddScoped<HttpContextAccessorService>(); // Register HttpContextAccessorService
 
 // Add Application Insights telemetry services
 builder.Services.AddApplicationInsightsTelemetry(options =>

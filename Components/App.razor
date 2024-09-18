@@ -1,4 +1,6 @@
 ﻿@inject BlazorNonceService BlazorNonceService
+@inject HttpContextAccessorService HttpContextAccessorService
+
 @using System.Security.Cryptography
 @using attendance.Services
 <!DOCTYPE html>
@@ -38,9 +40,7 @@
             return nonce;
         }else
         {
-            Span<byte> bytes = stackalloc byte[32];
-            RandomNumberGenerator.Fill(bytes);
-            nonce = Convert.ToBase64String(bytes);
+            nonce = HttpContextAccessorService.AllHeaders();
             Context.Items["nonce"] = nonce;
 
             return nonce;
