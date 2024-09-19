@@ -19,6 +19,7 @@ else
     var l2 = System.Text.Json.JsonSerializer.Serialize(studentClass.Students);
     <p>@l1</p>
     <p>@l2</p>
+    <p>@selectedDate</p>
 
     <h4>Daily attendance for:
         <select @onchange="OnDateChanged">
