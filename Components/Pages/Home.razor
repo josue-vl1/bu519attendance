@@ -94,6 +94,7 @@ else
 
     private string selectedDate;
     private string classname="";
+    private StudentClass? studentClass;
     private bool loading = false;
     private bool saving = false;
     private bool showButtons = false;
@@ -129,7 +130,11 @@ else
         // Set the default date to the closest date in the list
         selectedDate = availableDates.OrderBy(x => Math.Abs((x - DateTime.Now).TotalDays)).First().ToString("yyyy-MM-dd");
         loading = true;
-        Task.Run(() => LoadStudentsAsync()).GetAwaiter().GetResult();
+
+        studentClass = new StudentClass(classname);
+
+        students = await studentClass.LoadStudentsAsync();
+//        Task.Run(() => LoadStudentsAsync()).GetAwaiter().GetResult();
         // sort by name
         students = students.OrderBy(x => x.Name).ToList();
         loading = false;
