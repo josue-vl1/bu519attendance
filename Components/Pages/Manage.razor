@@ -16,6 +16,8 @@ else
 {
     <h1>Students</h1>
 
+    var l = System.Text.Json.JsonSerializer.Serialize(students);
+    <p>@l</p>
 
     <table class="table">
         <thead>
@@ -119,7 +121,7 @@ else
         {
             showButtons = true;
         }
-        
+
         studentClass = new StudentClass(classname);
         loading = true;
         students = await studentClass.LoadStudentsAsync();
