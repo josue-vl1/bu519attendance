@@ -171,7 +171,7 @@ else
         loading = true;
         showStudents = false;
         //StateHasChanged();
-        students = await studentClass.LoadStudentDataAsync();    //await LoadStudentDataAsync(selectedDate);
+        students = await studentClass.LoadStudentDataAsync(selectedDate);    //await LoadStudentDataAsync(selectedDate);
         loading = false;
         showStudents = true;
         status = studentClass.status;
