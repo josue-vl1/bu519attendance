@@ -119,6 +119,10 @@ else
         }
         else 
             return;
+        if (principalName == "nagendra@bu.edu")
+        {
+            classname = "488fall2024";
+        }
 
         GenerateAvailableDates();
 
@@ -164,18 +168,33 @@ else
 
     private async Task LoadStudentsAsync()
     {
-        var blobUri = new Uri($"https://studentinfo.blob.core.windows.net/{classname}/students.json");
+        var containerUri = new Uri($"https://studentinfo.blob.core.windows.net/{classname}");
+        var blobUri = new Uri($"{containerUri}/students.json");
 
         try
         {
             var credential = new Azure.Identity.DefaultAzureCredential();
             var blobClient = new Azure.Storage.Blobs.BlobClient(blobUri, credential);
+            var containerClient = new Azure.Storage.Blobs.BlobContainerClient(containerUri, credential);
 
-            var response = await blobClient.DownloadAsync();
-            using (var streamReader = new StreamReader(response.Value.Content))
+            // Check if the container exists, and create it if it does not
+            if (!await containerClient.ExistsAsync())
             {
-                var jsonData = await streamReader.ReadToEndAsync();
-                students = System.Text.Json.JsonSerializer.Deserialize<List<Student>>(jsonData) ?? new List<Student>();
+                await containerClient.CreateAsync();
+                Console.WriteLine("Container created.");
+            }
+
+            if (await blobClient.ExistsAsync())
+            {
+                var response = await blobClient.DownloadAsync();
+                using (var streamReader = new StreamReader(response.Value.Content))
+                {
+                    var jsonData = await streamReader.ReadToEndAsync();
+                    students = System.Text.Json.JsonSerializer.Deserialize<List<Student>>(jsonData) ?? new List<Student>();
+                }
+            }
+            else {
+                students = new List<Student>();
             }
 
             //Console.WriteLine("Data loaded successfully");
