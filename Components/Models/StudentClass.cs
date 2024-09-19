@@ -16,6 +16,8 @@ namespace attendance.Components.Models
 
         private HttpClient httpClient = new HttpClient();
 
+        public string error;
+
         public StudentClass(string className)
         {
             this.className = className;
@@ -186,6 +188,7 @@ namespace attendance.Components.Models
             catch (Exception e)
             {
                 Console.WriteLine($"Error saving student data: {e.Message}");
+                error = e.Message ?? "Unknown error";
             }
 
             return false;
