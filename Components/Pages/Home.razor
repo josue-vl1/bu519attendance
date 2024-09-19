@@ -14,14 +14,6 @@
 }
 else
 {
-
-    var l1 = System.Text.Json.JsonSerializer.Serialize(students);
-    var l2 = System.Text.Json.JsonSerializer.Serialize(studentClass.Students);
-    <p>@l1</p>
-    <p>@l2</p>
-    <p>@selectedDate</p>
-    <p>@status</p>
-
     <h4>Daily attendance for:
         <select @onchange="OnDateChanged">
             <option value="">Select a date</option>
