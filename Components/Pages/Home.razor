@@ -173,6 +173,7 @@ else
     {
         saving = true;
         StateHasChanged();
+        studentClass.Students = students;
         await studentClass.SaveStudentDataAsync(date);
         saving = false;
         StateHasChanged();

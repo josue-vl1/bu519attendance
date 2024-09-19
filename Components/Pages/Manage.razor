@@ -16,12 +16,6 @@ else
 {
     <h1>Students</h1>
 
-    var l = System.Text.Json.JsonSerializer.Serialize(students);
-    var l2 = System.Text.Json.JsonSerializer.Serialize(studentClass.Students);
-    <p>@l</p>
-    <p>@l2</p>
-    <p>@p</p>
-
     <table class="table">
         <thead>
             <tr>
@@ -111,9 +105,6 @@ else
     private string principalName = "foo";
     private bool error = false;
     private StudentClass? studentClass;
-
-    private string p = "";
-
     private Student newStudent = new Student();
     List<Student> students = new List<Student>();
 
@@ -161,7 +152,6 @@ else
         studentClass.Students = students;
         await studentClass.SaveStudentsAsync();
         saving = false;
-        p = studentClass.error;
     }
 
 
