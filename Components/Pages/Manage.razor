@@ -12,7 +12,8 @@
     <h1>Unauthorized</h1>
     <p>You are not authorized to view this page.</p>
 }
-else {
+else
+{
     <h1>Students</h1>
 
 
@@ -60,7 +61,7 @@ else {
                         }
                     </td>
                     <td>
-                        <a href="#" @onclick:preventDefault @onclick="() => ToggleEdit(student)">
+                        <a href="#" @onclick:preventDefault @onclick="() => ToggleEditAsync(student)">
                             @(student.IsEditing ? "Save" : "Edit")
                         </a>
                     </td>
@@ -74,35 +75,37 @@ else {
                     <input @bind="newStudent.BUID" class="form-control" placeholder="New BUID" />
                 </td>
                 <td>
-                    <button @onclick="AddStudent" class="btn btn-primary">Add</button>
+                    <button @onclick="AddStudentAsync" class="btn btn-primary">Add</button>
                 </td>
             </tr>
-            
-            </tbody>
+
+        </tbody>
     </table>
 
     @if (loading || saving)
     {
-    <div style="height: 85px; width: 300px; background-color: bisque; border: solid 4px black; z-index: 5; position: absolute; left: 300px; top: 200px;"> 
-        @if (loading)
-        {
-            <span>Loading...</span>
-        }
-        else if (saving)
-        {
-            <span>Saving...</span>
-        }
-    </div>
+        <div
+            style="height: 85px; width: 300px; background-color: bisque; border: solid 4px black; z-index: 5; position: absolute; left: 300px; top: 200px;">
+            @if (loading)
+            {
+                <span>Loading...</span>
+            }
+            else if (saving)
+            {
+                <span>Saving...</span>
+            }
+        </div>
     }
 }
 
 @code {
     private bool loading = false;
-    private string classname="";
+    private string classname = "";
     private bool saving = false;
     private bool showButtons = false;
     private string principalName = "foo";
     private bool error = false;
+    private StudentClass? studentClass;
 
 
     private Student newStudent = new Student();
@@ -110,17 +113,12 @@ else {
 
     protected override async Task OnInitializedAsync()
     {
-        principalName= BlazorNonceService.Nonce; 
-        if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
-        {
-            showButtons = true;
-            classname = "519fall2024";
-        }
-        else
-          return;
+        principalName = BlazorNonceService.Nonce;
+        classname = StudentClass.lookupClassName(principalName).First();
 
+        studentClass = new StudentClass(classname);
         loading = true;
-        await LoadStudentsAsync();
+        students = await studentClass.LoadStudentsAsync();
         loading = false;
 
         // sort by name
@@ -128,69 +126,29 @@ else {
         StateHasChanged();
     }
 
-    private void ToggleEdit(Student student)
+    private async Task ToggleEditAsync(Student student)
     {
         student.IsEditing = !student.IsEditing;
         if (!student.IsEditing)
         {
-            SerializeStudents();
+            await SerializeStudentsAsync();
         }
     }
 
-    private void AddStudent()
+    private async Task AddStudentAsync()
     {
         if (!string.IsNullOrWhiteSpace(newStudent.Name) && !string.IsNullOrWhiteSpace(newStudent.BUID))
         {
             students.Add(new Student { Name = newStudent.Name, BUID = newStudent.BUID });
             newStudent = new Student(); // Reset the new student entry
-            SerializeStudents();
+            await SerializeStudentsAsync();
         }
     }
 
-    private async Task LoadStudentsAsync()
-    {
-        var blobUri = new Uri($"https://studentinfo.blob.core.windows.net/{classname}/students.json");
-
-        try {
-            var credential = new Azure.Identity.DefaultAzureCredential();
-            var blobClient = new Azure.Storage.Blobs.BlobClient(blobUri, credential);
-
-            var response = await blobClient.DownloadAsync();
-            using (var streamReader = new StreamReader(response.Value.Content))
-            {
-                var jsonData = await streamReader.ReadToEndAsync();
-                students = System.Text.Json.JsonSerializer.Deserialize<List<Student>>(jsonData) ?? new List<Student>();
-            }
-
-            Console.WriteLine("Data loaded successfully");
-        }
-        catch (Exception e) {
-            Console.WriteLine($"Error loading student data: {e.Message}");
-        }
-    }
-
-    private void SerializeStudents()
+    private async Task SerializeStudentsAsync()
     {
         saving = true;
-        var jsonData = System.Text.Json.JsonSerializer.Serialize(students);
-
-        var blobUri = new Uri($"https://studentinfo.blob.core.windows.net/{classname}/students.json");
-
-        try {
-            var credential = new Azure.Identity.DefaultAzureCredential();
-            var blobClient = new Azure.Storage.Blobs.BlobClient(blobUri, credential);
-
-            using (var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonData)))
-            {
-                Console.WriteLine("Uploading data to blob storage");
-                blobClient.Upload(stream, overwrite: true);
-                Console.WriteLine("Data saved successfully");
-            }
-
-        }
-        catch (Exception e) {
-            Console.WriteLine($"Error saving student data: {e.Message}");
-        }
+        await studentClass.SaveStudentsAsync();
         saving = false;
     }
 
