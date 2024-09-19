@@ -17,6 +17,7 @@ namespace attendance.Components.Models
         private HttpClient httpClient = new HttpClient();
 
         public string error = "";
+        public string status = "";
 
         public StudentClass(string className)
         {
@@ -115,6 +116,7 @@ namespace attendance.Components.Models
         public async Task<List<Student>> LoadStudentDataAsync(string _date)
         {
             var date = System.Text.Encodings.Web.UrlEncoder.Default.Encode(_date) + ".json";
+            status = $"Loading : {date}";
             //Console.WriteLine($"Loading student data for {date}");
             try
             {
@@ -167,6 +169,7 @@ namespace attendance.Components.Models
         {
             var date = System.Text.Encodings.Web.UrlEncoder.Default.Encode(_date) + ".json";
             var blobUri = new Uri($"{containerUri}/{date}");
+            status = $"Saving : {date}";
 
             try
             {
