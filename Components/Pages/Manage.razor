@@ -17,7 +17,6 @@ else
     <h1>Students</h1>
 
     var l = System.Text.Json.JsonSerializer.Serialize(students);
-    var p = studentClass.error;
     <p>@l</p>
     <p>@p</p>
 
@@ -111,6 +110,7 @@ else
     private bool error = false;
     private StudentClass? studentClass;
 
+    private string p = "";
 
     private Student newStudent = new Student();
     List<Student> students = new List<Student>();
@@ -158,6 +158,7 @@ else
         saving = true;
         await studentClass.SaveStudentsAsync();
         saving = false;
+        p = studentClass.error;
     }
 
 

@@ -176,7 +176,8 @@ namespace attendance.Components.Models
                     Present = x.Present,
                     Exempt = x.Exempt
                 }).ToList());
-                error = jsonData;
+                error += " -- data:  " + jsonData + " --  ";
+                
                 //Console.WriteLine("Data to save: " + jsonData);
                 var blobClient = new Azure.Storage.Blobs.BlobClient(blobUri, credential);
 
