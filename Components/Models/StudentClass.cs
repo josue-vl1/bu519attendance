@@ -133,13 +133,16 @@ namespace attendance.Components.Models
                 // Check if the blob exists
                 if (await blobClient.ExistsAsync())
                 {
-                    var response = await httpClient.GetAsync(blobUri.ToString());
+                    var response = await blobClient.DownloadAsync();
 
-                    if (response.IsSuccessStatusCode)
+                    using (var streamReader = new StreamReader(response.Value.Content))
                     {
-                        var attendance = await response.Content.ReadFromJsonAsync<List<StudentData>>();
+                        var jsonData = await streamReader.ReadToEndAsync();
+                        var attendance = System.Text.Json.JsonSerializer.Deserialize<List<StudentData>>(jsonData);
                         if (attendance != null)
                         {
+
+                            status += $" - {attendance.Count} students found";
                             foreach (var student in attendance)
                             {
                                 var index = students.FindIndex(x => x.BUID == student.BUID);
@@ -153,13 +156,15 @@ namespace attendance.Components.Models
                     }
                 } else {
                     Console.WriteLine("No attendance data found for this date");
+
+                    status += " - No attendance data found";
                 }
 
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Error loading student data: {e.Message}");
-                error += "  - Error loading student attendance data: " + e.Message + " - ";
+                status += " - Error loading student data: " + e.Message;
             }
 
             return students;
