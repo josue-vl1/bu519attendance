@@ -45,10 +45,10 @@ namespace attendance.Components.Models
                 classnames.Add("519fall2024");
             }
 
-            if (principalName == "nagendra@bu.edu")
-            {
-                classnames = new List<string>() {"488fall2024"};
-            }
+            // if (principalName == "nagendra@bu.edu")
+            // {
+            //     classnames = new List<string>() {"488fall2024"};
+            // }
 
             return classnames;
         }
