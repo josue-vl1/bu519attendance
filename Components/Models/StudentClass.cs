@@ -68,6 +68,8 @@ namespace attendance.Components.Models
                     {
                         var jsonData = await streamReader.ReadToEndAsync();
                         students = System.Text.Json.JsonSerializer.Deserialize<List<Student>>(jsonData) ?? new List<Student>();
+                        students = students.OrderBy(x => x.Name).ToList();
+
                     }
                 }
                 else
