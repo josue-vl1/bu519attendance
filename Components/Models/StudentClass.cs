@@ -16,7 +16,7 @@ namespace attendance.Components.Models
 
         private HttpClient httpClient = new HttpClient();
 
-        public string error;
+        public string error = "";
 
         public StudentClass(string className)
         {
@@ -79,6 +79,8 @@ namespace attendance.Components.Models
             catch (Exception e)
             {
                 Console.WriteLine($"Error loading student data: {e.Message}");
+                error += "  - Error loading student data: " + e.Message + " - ";
+
             }
 
             return students;
@@ -104,6 +106,7 @@ namespace attendance.Components.Models
             catch (Exception e)
             {
                 Console.WriteLine($"Error saving student data: {e.Message}");
+                error += "  - Error saving student data: " + e.Message + " - ";
             }
 
             return false;
@@ -154,6 +157,7 @@ namespace attendance.Components.Models
             catch (Exception e)
             {
                 Console.WriteLine($"Error loading student data: {e.Message}");
+                error += "  - Error loading student attendance data: " + e.Message + " - ";
             }
 
             return students;
@@ -172,12 +176,14 @@ namespace attendance.Components.Models
                     Present = x.Present,
                     Exempt = x.Exempt
                 }).ToList());
+                error = jsonData;
                 //Console.WriteLine("Data to save: " + jsonData);
                 var blobClient = new Azure.Storage.Blobs.BlobClient(blobUri, credential);
 
                 using (var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonData)))
                 {
                     //Console.WriteLine("Uploading data to blob storage");
+                    error += " - uploading data- ";
                     await blobClient.UploadAsync(stream, overwrite: true);
                     //Console.WriteLine("Data saved successfully");
                 }
@@ -188,7 +194,7 @@ namespace attendance.Components.Models
             catch (Exception e)
             {
                 Console.WriteLine($"Error saving student data: {e.Message}");
-                error = e.Message ?? "Unknown error";
+                error += e.Message ?? "Unknown error";
             }
 
             return false;
