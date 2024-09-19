@@ -114,7 +114,11 @@ else
 
         principalName= BlazorNonceService.Nonce; 
 
-        classname = StudentClass.lookupClassName(principalName).First();
+        classname = StudentClass.lookupClassName(principalName).FirstOrDefault();
+        if (classname != null)
+        {
+            showButtons = true;
+        }
 
         GenerateAvailableDates();
 

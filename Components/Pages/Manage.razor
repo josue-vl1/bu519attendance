@@ -114,8 +114,12 @@ else
     protected override async Task OnInitializedAsync()
     {
         principalName = BlazorNonceService.Nonce;
-        classname = StudentClass.lookupClassName(principalName).First();
-
+        classname = StudentClass.lookupClassName(principalName).FirstOrDefault();
+        if (classname != null)
+        {
+            showButtons = true;
+        }
+        
         studentClass = new StudentClass(classname);
         loading = true;
         students = await studentClass.LoadStudentsAsync();
