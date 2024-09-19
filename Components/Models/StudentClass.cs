@@ -12,6 +12,7 @@ namespace attendance.Components.Models
 
         private Uri containerUri;
         private Uri blobUri;
+        private Azure.Identity.DefaultAzureCredential? credential = null;
 
         private HttpClient httpClient = new HttpClient();
 
@@ -20,6 +21,16 @@ namespace attendance.Components.Models
             this.className = className;
             containerUri = new Uri($"https://studentinfo.blob.core.windows.net/{className}");
             blobUri = new Uri($"{containerUri}/students.json");
+
+            credential = new Azure.Identity.DefaultAzureCredential();
+            var containerClient = new Azure.Storage.Blobs.BlobContainerClient(containerUri, credential);
+
+            // Check if the container exists, and create it if it does not
+            if (!containerClient.Exists())
+            {
+                containerClient.Create();
+                Console.WriteLine("Container created.");
+            }
         }
 
         public static List<string> lookupClassName(string principalName) {
@@ -43,16 +54,9 @@ namespace attendance.Components.Models
         {
             try
             {
-                var credential = new Azure.Identity.DefaultAzureCredential();
                 var blobClient = new Azure.Storage.Blobs.BlobClient(blobUri, credential);
                 var containerClient = new Azure.Storage.Blobs.BlobContainerClient(containerUri, credential);
 
-                // Check if the container exists, and create it if it does not
-                if (!await containerClient.ExistsAsync())
-                {
-                    await containerClient.CreateAsync();
-                    Console.WriteLine("Container created.");
-                }
 
                 if (await blobClient.ExistsAsync())
                 {
@@ -85,14 +89,12 @@ namespace attendance.Components.Models
 
             try
             {
-                var credential = new Azure.Identity.DefaultAzureCredential();
                 var blobClient = new Azure.Storage.Blobs.BlobClient(blobUri, credential);
 
                 using (var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonData)))
                 {
                     Console.WriteLine("Uploading data to blob storage");
                     await blobClient.UploadAsync(stream, overwrite: true);
-                    Console.WriteLine("Data saved successfully");
                 }
 
                 return true;
@@ -112,30 +114,38 @@ namespace attendance.Components.Models
             try
             {
                 var blobUri = new Uri($"{containerUri}/{date}");
-                var response = await httpClient.GetAsync(blobUri.ToString());
+                var blobClient = new Azure.Storage.Blobs.BlobClient(blobUri, credential);
 
-                //reset the student attendance data
-                foreach (var student in students)
+                // Check if the blob exists
+                if (await blobClient.ExistsAsync())
                 {
-                    student.Present = false;
-                    student.Exempt = false;
-                }
+                    var response = await httpClient.GetAsync(blobUri.ToString());
 
-                if (response.IsSuccessStatusCode)
-                {
-                    var attendance = await response.Content.ReadFromJsonAsync<List<StudentData>>();
-                    if (attendance != null)
+                    //reset the student attendance data
+                    foreach (var student in students)
                     {
-                        foreach (var student in attendance)
+                        student.Present = false;
+                        student.Exempt = false;
+                    }
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var attendance = await response.Content.ReadFromJsonAsync<List<StudentData>>();
+                        if (attendance != null)
                         {
-                            var index = students.FindIndex(x => x.BUID == student.BUID);
-                            if (index != -1)
+                            foreach (var student in attendance)
                             {
-                                students[index].Present = student.Present;
-                                students[index].Exempt = student.Exempt;
+                                var index = students.FindIndex(x => x.BUID == student.BUID);
+                                if (index != -1)
+                                {
+                                    students[index].Present = student.Present;
+                                    students[index].Exempt = student.Exempt;
+                                }
                             }
                         }
                     }
+                } else {
+                    Console.WriteLine("No attendance data found for this date");
                 }
 
             }
@@ -145,7 +155,6 @@ namespace attendance.Components.Models
             }
 
             return students;
-
         }
 
         public async Task<bool> SaveStudentDataAsync(string date)
@@ -162,7 +171,6 @@ namespace attendance.Components.Models
                     Exempt = x.Exempt
                 }).ToList());
                 //Console.WriteLine("Data to save: " + jsonData);
-                var credential = new Azure.Identity.DefaultAzureCredential();
                 var blobClient = new Azure.Storage.Blobs.BlobClient(blobUri, credential);
 
                 using (var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(jsonData)))
