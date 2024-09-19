@@ -112,9 +112,9 @@ namespace attendance.Components.Models
             return false;
         }
 
-        public async Task<List<Student>> LoadStudentDataAsync(string date)
+        public async Task<List<Student>> LoadStudentDataAsync(string _date)
         {
-            date = System.Text.Encodings.Web.UrlEncoder.Default.Encode(date) + ".json";
+            var date = System.Text.Encodings.Web.UrlEncoder.Default.Encode(_date) + ".json";
             //Console.WriteLine($"Loading student data for {date}");
             try
             {
@@ -163,9 +163,9 @@ namespace attendance.Components.Models
             return students;
         }
 
-        public async Task<bool> SaveStudentDataAsync(string date)
+        public async Task<bool> SaveStudentDataAsync(string _date)
         {
-            date = System.Text.Encodings.Web.UrlEncoder.Default.Encode(date) + ".json";
+            var date = System.Text.Encodings.Web.UrlEncoder.Default.Encode(date) + ".json";
             var blobUri = new Uri($"{containerUri}/{date}");
 
             try
