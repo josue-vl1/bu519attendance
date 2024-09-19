@@ -165,7 +165,7 @@ namespace attendance.Components.Models
 
         public async Task<bool> SaveStudentDataAsync(string _date)
         {
-            var date = System.Text.Encodings.Web.UrlEncoder.Default.Encode(date) + ".json";
+            var date = System.Text.Encodings.Web.UrlEncoder.Default.Encode(_date) + ".json";
             var blobUri = new Uri($"{containerUri}/{date}");
 
             try
