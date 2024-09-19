@@ -121,17 +121,17 @@ namespace attendance.Components.Models
                 var blobUri = new Uri($"{containerUri}/{date}");
                 var blobClient = new Azure.Storage.Blobs.BlobClient(blobUri, credential);
 
+                //reset the student attendance data
+                foreach (var student in students)
+                {
+                    student.Present = false;
+                    student.Exempt = false;
+                }
+
                 // Check if the blob exists
                 if (await blobClient.ExistsAsync())
                 {
                     var response = await httpClient.GetAsync(blobUri.ToString());
-
-                    //reset the student attendance data
-                    foreach (var student in students)
-                    {
-                        student.Present = false;
-                        student.Exempt = false;
-                    }
 
                     if (response.IsSuccessStatusCode)
                     {
@@ -177,7 +177,7 @@ namespace attendance.Components.Models
                     Exempt = x.Exempt
                 }).ToList());
                 error += " -- data:  " + jsonData + " --  ";
-                
+
                 //Console.WriteLine("Data to save: " + jsonData);
                 var blobClient = new Azure.Storage.Blobs.BlobClient(blobUri, credential);
 

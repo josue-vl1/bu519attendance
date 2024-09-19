@@ -161,11 +161,11 @@ else
         //Console.WriteLine($"Selected date: {e.Value} {selectedDate}");
         loading = true;
         showStudents = false;
-        StateHasChanged();
+        //StateHasChanged();
         students = await studentClass.LoadStudentDataAsync(selectedDate);    //await LoadStudentDataAsync(selectedDate);
         loading = false;
         showStudents = true;
-        StateHasChanged();
+        //StateHasChanged();
     }
 
     // Save student attence data to blob storage
