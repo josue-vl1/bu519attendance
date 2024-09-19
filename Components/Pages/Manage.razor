@@ -158,6 +158,7 @@ else
     private async Task SerializeStudentsAsync()
     {
         saving = true;
+        studentClass.Students = students;
         await studentClass.SaveStudentsAsync();
         saving = false;
         p = studentClass.error;
