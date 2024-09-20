@@ -1,0 +1,112 @@
+@using System.Globalization
+
+<div @attributes="AdditionalAttributes" class="cal">
+    <table>
+        <thead>
+            <tr>
+                <td colspan="7">@months[Month] @Year</td>
+            </tr>
+            <tr>
+                @foreach (var day in days)
+                {
+                    <th>@day</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var firstDayOfMonth = new DateTime(Year, Month, 1);
+                var startDayOfWeek = (int)firstDayOfMonth.DayOfWeek;
+                var currentDay = 1;
+
+                // Fill the first week with empty cells if the month doesn't start on Sunday
+                <tr>
+                    @for (int i = 0; i < startDayOfWeek; i++)
+                    {
+                        <td class="nonday"></td>
+                    }
+                    @for (int i = startDayOfWeek; i < 7; i++)
+                    {
+                        if (currentDay <= monthDates.Count)
+                        {
+                            var date = new DateTime(Year, Month, currentDay);
+                            <td class="@(IsHighlighted(date) ? "highlighted" : "") day">@currentDay</td>
+                            currentDay++;
+                        }
+                    }
+                </tr>
+
+                // Fill the rest of the weeks
+                while (currentDay <= monthDates.Count)
+                {
+                    int i = 0;
+                    <tr>
+                        @for (i = 0; i < 7 && currentDay <= monthDates.Count; i++)
+                        {
+                            var date = new DateTime(Year, Month, currentDay);
+                            <td class="@(IsHighlighted(date) ? "highlighted" : "") day">@currentDay</td>
+                            currentDay++;
+                        }
+                        @if (i < 7)
+                        {
+                            @for (; i < 7; i++)
+                            {
+                                <td class="nonday"></td>
+                            }
+                        }
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .highlighted {
+        background-color: yellow !important;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int Month { get; set; }
+
+    [Parameter]
+    public int Year { get; set; }
+
+    [Parameter]
+    public List<DateOnly> HighlightedDates { get; set; } = new List<DateOnly>();
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> AdditionalAttributes { get; set; }
+
+    private List<string> days = new List<string> { "S", "M", "T", "W", "T", "F", "S" };
+    private Dictionary<int, string> months = CultureInfo.CurrentCulture.DateTimeFormat.MonthNames
+    .Where(m => !string.IsNullOrEmpty(m))
+    .Select((m, i) => new { Month = i + 1, Name = m })
+    .ToDictionary(x => x.Month, x => x.Name);
+
+    private List<DateTime> monthDates = new List<DateTime>();
+
+    protected override void OnParametersSet()
+    {
+        GenerateMonthDates();
+    }
+
+    private void GenerateMonthDates()
+    {
+        monthDates.Clear();
+        var daysInMonth = DateTime.DaysInMonth(Year, Month);
+        for (var day = 1; day <= daysInMonth; day++)
+        {
+            monthDates.Add(new DateTime(Year, Month, day));
+        }
+    }
+
+    private bool IsHighlighted(DateTime date)
+    {
+        var c = HighlightedDates.Contains(DateOnly.FromDateTime(date));
+        //Console.WriteLine($"Checking {DateOnly.FromDateTime(date)} = {c}");
+        return c;
+    }
+}

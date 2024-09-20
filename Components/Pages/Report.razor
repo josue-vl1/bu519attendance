@@ -1,0 +1,45 @@
+﻿@page "/report"
+@using System.Globalization
+@using attendance.Components.Module
+@using attendance.Components.Models
+@using attendance.Services
+@inject BlazorNonceService BlazorNonceService
+
+
+<PageTitle>Report</PageTitle>
+
+<div class="cals">
+    <CalendarMonth Month="9" Year="2024" class="cal" HighlightedDates="highlightedDates"/>
+    <CalendarMonth Month="10" Year="2024" class="cal" HighlightedDates="highlightedDates"/>
+    <CalendarMonth Month="11" Year="2024" class="cal" HighlightedDates="highlightedDates"/>
+</div>
+
+@code {
+
+    private string principalName;
+    private string classname;
+    private bool showButtons = false;
+    private StudentClass? studentClass;
+    private List<DateOnly> highlightedDates = new List<DateOnly>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        principalName= BlazorNonceService.Nonce; 
+        principalName = "nagendra@bu.edu";
+        classname = StudentClass.lookupClassName(principalName).FirstOrDefault();
+        //classname = "519fall2024";
+        studentClass = new StudentClass(classname);
+        if (classname != null)
+        {
+            showButtons = true;
+
+            highlightedDates = StudentClass.getSchedule(classname);
+
+            foreach (var date in highlightedDates)
+            {
+                Console.WriteLine(date);
+            }
+        }
+    // No changes needed here for this example
+    }
+}

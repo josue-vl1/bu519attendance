@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using NCrontab;
+
 
 namespace attendance.Components.Models
 {
@@ -19,9 +21,12 @@ namespace attendance.Components.Models
         public string error = "";
         public string status = "";
 
+        private static Dictionary<string, ClassInfo> scheduleData = new Dictionary<string, ClassInfo>();
+
         public StudentClass(string className)
         {
             this.className = className;
+            try {
             containerUri = new Uri($"https://studentinfo.blob.core.windows.net/{className}");
             blobUri = new Uri($"{containerUri}/students.json");
 
@@ -34,21 +39,52 @@ namespace attendance.Components.Models
                 containerClient.Create();
                 Console.WriteLine("Container created.");
             }
+            } catch (Exception e) {
+                Console.WriteLine("Error creating container: " + e.Message);
+            }
+
+            scheduleData["519fall2024"] = new ClassInfo("0 0 * * 1", new DateTime(2024,09,03), new DateTime(2024,12,31), 
+                    new List<string> { "nagendra@bu.edu", "langd0n@bu.edu", "matzh@bu.edu"});
+        }
+
+        public static List<DateOnly> getSchedule(string classname) {
+            List<DateOnly> schedule = new List<DateOnly>();
+
+            if (scheduleData.ContainsKey(classname)) {
+
+                var info = scheduleData[classname];
+                var cronSchedule = CrontabSchedule.Parse(info.Schedule);
+                var occurrence = cronSchedule.GetNextOccurrences(info.StartDate, info.EndDate);
+
+                //schedule.AddRange(occurrence);
+                //convert to dateonly
+                schedule = occurrence.Select(x => DateOnly.FromDateTime(x.Date)).ToList();
+            }
+
+            return schedule;
         }
 
         public static List<string> lookupClassName(string principalName) {
 
             List<string> classnames = new List<string>();
 
-            if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
-            {
-                classnames.Add("519fall2024");
-            }
+            // if (principalName == "nagendra@bu.edu" || principalName == "langd0n@bu.edu" || principalName == "matzh@bu.edu")
+            // {
+            //     classnames.Add("519fall2024");
+            // }
 
             // if (principalName == "nagendra@bu.edu")
             // {
             //     classnames = new List<string>() {"488fall2024"};
             // }
+
+            foreach (var item in scheduleData)
+            {
+                if (item.Value.Instructors.Contains(principalName))
+                {
+                    classnames.Add(item.Key);
+                }
+            }
 
             return classnames;
         }
