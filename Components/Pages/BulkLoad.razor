@@ -1,0 +1,152 @@
+@page "/bulkload"
+@using attendance.Components.Models
+@using attendance.Services
+@using Azure;
+@using Azure.Identity;
+@using static System.Environment;
+@using System.Text.Json;
+@using System.Text;
+
+@inject BlazorNonceService BlazorNonceService
+
+@attribute [StreamRendering]
+
+<PageTitle>Bulk Loader</PageTitle>
+@if (!showOutput && showButtons) {
+    <h1>Paste the input data here:</h1>
+    <h3>Input:</h3>
+    <textarea @bind="inputData" class="form-control" rows="15" cols="120"></textarea>
+    <button @onclick="() => makeCall()">Parse</button>
+}
+
+@if (showOutput)
+{
+    <table>
+        <tr><td>
+            <h3>Output:</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var d in outputData.students)
+                {
+                    <tr>
+                        <td>@d.firstname</td>
+                        <td>@d.lastname</td>
+                        <td>@d.id</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </td>
+        <td>
+            <button @onclick="() => import()">Import</button>
+        </td></tr>
+    </table>
+}
+
+@code
+{
+    private string inputData = "";
+    private dataList outputData = new dataList();
+    private bool showOutput = false;
+    private HttpClient httpClient = new HttpClient();
+    private string principalName;
+    private string classname;
+    private bool showButtons = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        principalName = BlazorNonceService.Nonce;
+        classname = StudentClass.lookupClassName(principalName).FirstOrDefault();
+        if (classname != null)
+        {
+            showButtons = true;
+        }
+    }
+
+    private async Task makeCall() {
+
+        string targetJson = "a JSON with key students value is array containing elements with firstname, lastname and id";
+        string prompt = $"Can you pull out all of the names of enrolled students from this text. Return the results in this JSON format: {targetJson} . DATA: ";
+
+        httpClient.DefaultRequestHeaders.Add("api-key", "4c3b80df540b4acf969be7789c31aa48");
+        //httpClient.DefaultRequestHeaders.Add("Content-Type", "application/json");
+            // Escape special characters in inputData
+        string escapedInputData = JsonSerializer.Serialize(inputData).Trim('"');
+
+//        Console.WriteLine(inputData);
+        var c = $@"
+        {{
+            ""messages"": [
+                {{""role"":""system"",""content"":""You are an AI assistant that helps people find information."" }},
+                {{""role"":""user"",""content"":""{prompt}{escapedInputData}"" }}
+            ],
+            ""max_tokens"": 8000,
+            ""temperature"": 0.7,
+            ""frequency_penalty"": 0,
+            ""presence_penalty"": 0,
+            ""top_p"": 0.95,
+            ""stop"": null
+        }}";
+
+   //     Console.WriteLine(c);
+        var content = new StringContent(c, Encoding.UTF8, "application/json");
+
+        // Ensure the Content-Type header is set correctly
+        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
+        var response = await httpClient.PostAsync("https://nvmopenai.openai.azure.com/openai/deployments/gpt-35-turbo-16k/chat/completions?api-version=2024-02-15-preview", content);
+        var responseString = await response.Content.ReadAsStringAsync();
+ //       Console.WriteLine(responseString);
+
+        var responseJson = JsonSerializer.Deserialize<JsonElement>(responseString);
+        
+        // output the content fild 
+        var choices = responseJson.GetProperty("choices");
+        var message = choices[0].GetProperty("message");
+        var rcontent = message.GetProperty("content").ToString();
+        Console.WriteLine(rcontent);
+        try
+        {
+            outputData = JsonSerializer.Deserialize<dataList>(rcontent);
+            showOutput = true;
+        }
+        catch (JsonException ex)
+        {
+            Console.WriteLine($"JSON deserialization error: {ex.Message}");
+        }
+
+
+        foreach (var d in outputData.students)
+        {
+            Console.WriteLine($"{d.firstname} {d.lastname} {d.id}");
+        }
+
+    }
+
+    private async Task import()
+    {
+    }
+
+    public class dataList {
+        public List<Student> students { get; set; } = new List<Student>();
+    }
+
+    public class Student
+    {
+        public string firstname { get; set; }
+        public string lastname { get; set; }
+        public string id { get; set; }
+    }
+}
+
+
+
+

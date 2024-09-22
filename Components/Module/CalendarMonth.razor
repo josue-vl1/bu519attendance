@@ -18,6 +18,7 @@
                 var firstDayOfMonth = new DateTime(Year, Month, 1);
                 var startDayOfWeek = (int)firstDayOfMonth.DayOfWeek;
                 var currentDay = 1;
+                bool isTheDay = false;
 
                 // Fill the first week with empty cells if the month doesn't start on Sunday
                 <tr>
@@ -30,7 +31,14 @@
                         if (currentDay <= monthDates.Count)
                         {
                             var date = new DateTime(Year, Month, currentDay);
-                            <td class="@(IsHighlighted(date) ? "highlighted" : "") day">@currentDay</td>
+                            isTheDay = IsHighlighted(date);
+                            Console.WriteLine($"Checking1 {date} = {isTheDay}");
+                            if (isTheDay)
+                            {
+                              <td class="highlighted day">@currentDay <div class="attendance">3</div></td>
+                            } else {
+                              <td class="day">@currentDay</td>
+                            }
                             currentDay++;
                         }
                     }
@@ -44,7 +52,14 @@
                         @for (i = 0; i < 7 && currentDay <= monthDates.Count; i++)
                         {
                             var date = new DateTime(Year, Month, currentDay);
-                            <td class="@(IsHighlighted(date) ? "highlighted" : "") day">@currentDay</td>
+                             isTheDay = IsHighlighted(date);
+                             Console.WriteLine($"Checking2 {date} = {isTheDay}");
+                            if (isTheDay)
+                            {
+                              <td class="highlighted day">@currentDay <div class="attendance">3</div></td>
+                            } else {
+                              <td class="day">@currentDay</td>
+                            }
                             currentDay++;
                         }
                         @if (i < 7)
@@ -64,7 +79,13 @@
 <style>
     .highlighted {
         background-color: yellow !important;
+        display: flex;
     }
+    .highlighted .attendance {
+        color: red; /* Red color */
+        font-size: smaller; /* Smaller font size */
+        /*flex-direction: ; */
+     }
 </style>
 
 @code {

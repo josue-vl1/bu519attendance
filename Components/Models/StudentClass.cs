@@ -26,31 +26,36 @@ namespace attendance.Components.Models
         public StudentClass(string className)
         {
             this.className = className;
-            try {
-            containerUri = new Uri($"https://studentinfo.blob.core.windows.net/{className}");
-            blobUri = new Uri($"{containerUri}/students.json");
-
-            credential = new Azure.Identity.DefaultAzureCredential();
-            var containerClient = new Azure.Storage.Blobs.BlobContainerClient(containerUri, credential);
-
-            // Check if the container exists, and create it if it does not
-            if (!containerClient.Exists())
+            try
             {
-                containerClient.Create();
-                Console.WriteLine("Container created.");
+                containerUri = new Uri($"https://studentinfo.blob.core.windows.net/{className}");
+                blobUri = new Uri($"{containerUri}/students.json");
+
+                credential = new Azure.Identity.DefaultAzureCredential();
+                var containerClient = new Azure.Storage.Blobs.BlobContainerClient(containerUri, credential);
+
+                // Check if the container exists, and create it if it does not
+                if (!containerClient.Exists())
+                {
+                    containerClient.Create();
+                    Console.WriteLine("Container created.");
+                }
             }
-            } catch (Exception e) {
+            catch (Exception e)
+            {
                 Console.WriteLine("Error creating container: " + e.Message);
             }
 
-            scheduleData["519fall2024"] = new ClassInfo("0 0 * * 1", new DateTime(2024,09,03), new DateTime(2024,12,31), 
-                    new List<string> { "nagendra@bu.edu", "langd0n@bu.edu", "matzh@bu.edu"});
+            scheduleData["519fall2024"] = new ClassInfo("0 0 * * 1", new DateTime(2024, 09, 03), new DateTime(2024, 12, 31),
+                    new List<string> { "nagendra@bu.edu", "langd0n@bu.edu", "matzh@bu.edu" });
         }
 
-        public static List<DateOnly> getSchedule(string classname) {
+        public static List<DateOnly> getSchedule(string classname)
+        {
             List<DateOnly> schedule = new List<DateOnly>();
 
-            if (scheduleData.ContainsKey(classname)) {
+            if (scheduleData.ContainsKey(classname))
+            {
 
                 var info = scheduleData[classname];
                 var cronSchedule = CrontabSchedule.Parse(info.Schedule);
@@ -64,7 +69,8 @@ namespace attendance.Components.Models
             return schedule;
         }
 
-        public static List<string> lookupClassName(string principalName) {
+        public static List<string> lookupClassName(string principalName)
+        {
 
             List<string> classnames = new List<string>();
 
@@ -192,7 +198,9 @@ namespace attendance.Components.Models
                             }
                         }
                     }
-                } else {
+                }
+                else
+                {
                     Console.WriteLine("No attendance data found for this date");
 
                     status += " - No attendance data found";
