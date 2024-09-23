@@ -114,6 +114,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         principalName = BlazorNonceService.Nonce;
+        //principalName = "nagendra@bu.edu";
         classname = StudentClass.lookupClassName(principalName).FirstOrDefault();
         if (classname != null)
         {

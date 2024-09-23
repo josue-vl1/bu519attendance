@@ -16,7 +16,11 @@
     <h1>Paste the input data here:</h1>
     <h3>Input:</h3>
     <textarea @bind="inputData" class="form-control" rows="15" cols="120"></textarea>
-    <button @onclick="() => makeCall()">Parse</button>
+    <div class="buttonRow">
+        <checkbox @bind="IdentifyAdds">Identify Adds</checkbox>
+        <checkbox @bind="IdentifyDeletes">Identify Deletes</checkbox>
+        <button @onclick="() => makeCall()">Parse</button>
+    </div>
 }
 
 @if (showOutput)
@@ -50,11 +54,20 @@
     </table>
 }
 
+<style>
+    .buttonRow {
+        display: flex;
+        flex-direction: row;
+    }
+</style>
+
 @code
 {
     private string inputData = "";
     private dataList outputData = new dataList();
     private bool showOutput = false;
+    private bool IdentifyAdds = true;
+    private bool IdentifyDeletes = true;
     private HttpClient httpClient = new HttpClient();
     private string principalName;
     private string classname;
@@ -76,7 +89,12 @@
         string targetJson = "a JSON with key students value is array containing elements with firstname, lastname and id";
         string prompt = $"Can you pull out all of the names of enrolled students from this text. Return the results in this JSON format: {targetJson} . DATA: ";
 
-        httpClient.DefaultRequestHeaders.Add("api-key", "4c3b80df540b4acf969be7789c31aa48");
+        // Get a token credential
+        var tokenCredential = new DefaultAzureCredential();
+        var token = tokenCredential.GetToken(new TokenRequestContext(new[] { "https://cognitiveservices.azure.com" }));
+
+
+        httpClient.DefaultRequestHeaders.Add("Authorization", "bearer " + token.Token);
         //httpClient.DefaultRequestHeaders.Add("Content-Type", "application/json");
             // Escape special characters in inputData
         string escapedInputData = JsonSerializer.Serialize(inputData).Trim('"');
