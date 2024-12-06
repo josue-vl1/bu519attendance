@@ -9,9 +9,10 @@
 <PageTitle>Report</PageTitle>
 
 <div class="cals">
-    <CalendarMonth Month="9" Year="2024" class="cal" HighlightedDates="highlightedDates"/>
-    <CalendarMonth Month="10" Year="2024" class="cal" HighlightedDates="highlightedDates"/>
-    <CalendarMonth Month="11" Year="2024" class="cal" HighlightedDates="highlightedDates"/>
+    <CalendarMonth Month="9" Year="2024" class="cal" HighlightedDates="highlightedDates" OnDateClick="HandleDateClick"/>
+    <CalendarMonth Month="10" Year="2024" class="cal" HighlightedDates="highlightedDates" OnDateClick="HandleDateClick"/>
+    <CalendarMonth Month="11" Year="2024" class="cal" HighlightedDates="highlightedDates" OnDateClick="HandleDateClick"/>
+    <CalendarMonth Month="12" Year="2024" class="cal" HighlightedDates="highlightedDates" OnDateClick="HandleDateClick"/>
 </div>
 
 @code {
@@ -35,11 +36,16 @@
 
             highlightedDates = StudentClass.getSchedule(classname);
 
-            foreach (var date in highlightedDates)
+            @* foreach (var date in highlightedDates)
             {
                 Console.WriteLine(date);
-            }
+            } *@
         }
-    // No changes needed here for this example
+    }
+
+    private void HandleDateClick(DateTime date)
+    {
+        Console.WriteLine($"Date clicked: {date}");
+        // Add your logic here to handle the date click event
     }
 }
