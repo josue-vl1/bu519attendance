@@ -1,25 +1,26 @@
 using System.Text.Json.Serialization;
+using Azure.Identity;
 using NCrontab;
-@*
-The StudentClass class is designed to manage information related to a specific class, including its schedule and associated data stored in Azure Blob Storage. Here's a summary of its key components and functionality:
-
-Summary
-Fields and Properties:
-
-status: A string to hold the status of the class.
-scheduleData: A static dictionary that maps class names to their respective ClassInfo objects, which contain scheduling information.
-Constructor:
-
-Initializes the class with a given class name.
-Sets up URIs for the Azure Blob Storage container and blob.
-Uses DefaultAzureCredential to authenticate with Azure.
-Checks if the container exists in Azure Blob Storage and creates it if it does not.
-Adds a predefined schedule for the class "519fall2024" to the scheduleData dictionary.
-Methods:
-
-getSchedule(string classname): Retrieves the schedule for a given class name. It parses the cron schedule, calculates the occurrences within the specified date range, and converts them to DateOnly objects.
-lookupClassName(string principalName): Returns a list of class names associated with a given principal name.
-*@
+//
+//The StudentClass class is designed to manage information related to a specific class, including its schedule and associated data stored in Azure Blob Storage. Here's a summary of its key components and functionality:
+//
+//Summary
+//Fields and Properties:
+//
+//status: A string to hold the status of the class.
+//scheduleData: A static dictionary that maps class names to their respective ClassInfo objects, which contain scheduling information.
+//Constructor:
+//
+//Initializes the class with a given class name.
+//Sets up URIs for the Azure Blob Storage container and blob.
+//Uses DefaultAzureCredential to authenticate with Azure.
+//Checks if the container exists in Azure Blob Storage and creates it if it does not.
+//Adds a predefined schedule for the class "519fall2024" to the scheduleData dictionary.
+//Methods:
+//
+//getSchedule(string classname): Retrieves the schedule for a given class name. It parses the cron schedule, calculates the occurrences within the specified date range, and converts them to DateOnly objects.
+//lookupClassName(string principalName): Returns a list of class names associated with a given principal name.
+//
 
 namespace attendance.Components.Models
 {
@@ -273,6 +274,28 @@ namespace attendance.Components.Models
 
             return false;
 
+        }
+
+        public async Task<List<StudentAttendance>> GetAttendanceForDateAsync(DateOnly date)
+        {
+            //var date = System.Text.Encodings.Web.UrlEncoder.Default.Encode(_date) + ".json";
+            status = $"Loading : {date}";
+            string blobName = $"attendance_{date:yyyyMMdd}.json";
+            Uri attendanceBlobUri = new Uri($"{containerUri}/{blobName}");
+            var blobClient = new Azure.Storage.Blobs.BlobClient(attendanceBlobUri, credential);
+
+            if (await blobClient.ExistsAsync())
+            {
+                var downloadResult = await blobClient.DownloadContentAsync();
+                var content = downloadResult.Value.Content.ToString();
+                var attendanceList = System.Text.Json.JsonSerializer.Deserialize<List<StudentAttendance>>(content);
+                return attendanceList ?? new List<StudentAttendance>();
+            }
+            else
+            {
+                // No attendance data for this date
+                return new List<StudentAttendance>();
+            }
         }
     }
 }

@@ -9,10 +9,14 @@
 <PageTitle>Report</PageTitle>
 
 <div class="cals">
-    <CalendarMonth Month="9" Year="2024" class="cal" HighlightedDates="highlightedDates" OnDateClick="HandleDateClick"/>
-    <CalendarMonth Month="10" Year="2024" class="cal" HighlightedDates="highlightedDates" OnDateClick="HandleDateClick"/>
-    <CalendarMonth Month="11" Year="2024" class="cal" HighlightedDates="highlightedDates" OnDateClick="HandleDateClick"/>
-    <CalendarMonth Month="12" Year="2024" class="cal" HighlightedDates="highlightedDates" OnDateClick="HandleDateClick"/>
+    <CalendarMonth Month="9" Year="2024" class="cal" HighlightedDates="highlightedDates"
+        OnDateClick="HandleDateClick" />
+    <CalendarMonth Month="10" Year="2024" class="cal" HighlightedDates="highlightedDates"
+        OnDateClick="HandleDateClick" />
+    <CalendarMonth Month="11" Year="2024" class="cal" HighlightedDates="highlightedDates"
+        OnDateClick="HandleDateClick" />
+    <CalendarMonth Month="12" Year="2024" class="cal" HighlightedDates="highlightedDates"
+        OnDateClick="HandleDateClick" />
 </div>
 
 @code {
@@ -25,7 +29,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        principalName= BlazorNonceService.Nonce; 
+        principalName = BlazorNonceService.Nonce;
         principalName = "nagendra@bu.edu";
         classname = StudentClass.lookupClassName(principalName).FirstOrDefault();
         classname = "519fall2024";
@@ -47,5 +51,20 @@
     {
         Console.WriteLine($"Date clicked: {date}");
         // Add your logic here to handle the date click event
+    }
+
+
+    private async Task calculateAttendance()
+    {
+
+        foreach (var date in highlightedDates)
+        {
+            var attendanceRecords = await studentClass.GetAttendanceForDateAsync(date);
+            Console.WriteLine($"Attendance for {date.ToString("yyyy-MM-dd")}:");
+            foreach (var record in attendanceRecords)
+            {
+                Console.WriteLine($"Student ID: {record.StudentId}, Name: {record.StudentName}, Present: {record.IsPresent}");
+            }
+        }
     }
 }
