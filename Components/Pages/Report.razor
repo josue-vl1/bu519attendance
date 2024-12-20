@@ -18,6 +18,32 @@
     <CalendarMonth Month="12" Year="2024" class="cal" HighlightedDates="highlightedDates"
         OnDateClick="HandleDateClick" />
 </div>
+<div class="data">
+    <h3>Attendance Report for {classname}</h3>
+    <button @onclick="calculateAttendance">Calculate Attendance</button>
+    <table>
+        <tbody>
+            <tr>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Present Attended</th>
+            </tr>
+            @{
+                foreach (var date in highlightedDates)
+                {
+                    foreach (var studentID in studentAttendance.Keys)
+                    {
+                        <tr>
+                            <td>@studentID</td>
+                            <td>Student name</td>
+                            <td> @studentAttendance[studentID] </td>
+                        </tr>
+                    }
+                }
+            }
+        </tbody>
+    </table>
+</div>
 
 @code {
 
@@ -27,6 +53,9 @@
     private StudentClass? studentClass;
     private List<DateOnly> highlightedDates = new List<DateOnly>();
 
+    private Dictionary<string, int> studentAttendance = new Dictionary<string, int>();
+    private Dictionary<string, string> studentNames = new Dictionary<string, string>();
+    private int totalClasses = 0;
     protected override async Task OnInitializedAsync()
     {
         principalName = BlazorNonceService.Nonce;
@@ -56,15 +85,32 @@
 
     private async Task calculateAttendance()
     {
-
+        Dictionary<DateOnly, Dictionary<string, bool>> attendanceRecords = new Dictionary<DateOnly, Dictionary<string, bool>>();
+        Dictionary<string, bool> StudentIds = new Dictionary<string, bool>();
+        List<string> students = new List<string>();
+            
         foreach (var date in highlightedDates)
         {
-            var attendanceRecords = await studentClass.GetAttendanceForDateAsync(date);
-            Console.WriteLine($"Attendance for {date.ToString("yyyy-MM-dd")}:");
-            foreach (var record in attendanceRecords)
+            var attendance = await studentClass?.GetAttendanceForDateAsync(date) ?? new List<StudentAttendance>();
+
+            // Make a list of student ids that day and whether they were present
+            StudentIds = attendance.ToDictionary(x => x.StudentId, x => x.IsPresent);
+
+            // merge the list of student ids in the class into students, making sure they are unique
+            students = students.Union(StudentIds.Keys).ToList();
+
+            // Keep track of each student's total attendance
+            foreach (var student in StudentIds.Keys)
             {
-                Console.WriteLine($"Student ID: {record.StudentId}, Name: {record.StudentName}, Present: {record.IsPresent}");
+                studentAttendance[student] = studentAttendance.ContainsKey(student) ? studentAttendance[student] + (StudentIds[student] ? 1:0) : 1;
             }
+
+            // Keep track of each student's attendance for each day
+            attendanceRecords[date] = StudentIds;
         }
+
+        // Calculate the total number of classes
+        totalClasses = highlightedDates.Count;
+
     }
 }
