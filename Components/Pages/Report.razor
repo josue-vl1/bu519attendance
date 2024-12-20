@@ -5,67 +5,71 @@
 @using attendance.Services
 @inject BlazorNonceService BlazorNonceService
 
-
 <PageTitle>Report</PageTitle>
+<div class="sidexside">
+    <div class="cals">
+        <CalendarMonth Month="9" Year="2024" class="cal" HighlightedDates="highlightedDates"
+            OnDateClick="HandleDateClick" />
+        <CalendarMonth Month="10" Year="2024" class="cal" HighlightedDates="highlightedDates"
+            OnDateClick="HandleDateClick" />
+        <CalendarMonth Month="11" Year="2024" class="cal" HighlightedDates="highlightedDates"
+            OnDateClick="HandleDateClick" />
+        <CalendarMonth Month="12" Year="2024" class="cal" HighlightedDates="highlightedDates"
+            OnDateClick="HandleDateClick" />
+    </div>
+    <div class="data">
+        <h3>Attendance Report for @classname</h3>
+        <button @onclick="calculateAttendance">Calculate Attendance</button>
 
-<div class="cals">
-    <CalendarMonth Month="9" Year="2024" class="cal" HighlightedDates="highlightedDates"
-        OnDateClick="HandleDateClick" />
-    <CalendarMonth Month="10" Year="2024" class="cal" HighlightedDates="highlightedDates"
-        OnDateClick="HandleDateClick" />
-    <CalendarMonth Month="11" Year="2024" class="cal" HighlightedDates="highlightedDates"
-        OnDateClick="HandleDateClick" />
-    <CalendarMonth Month="12" Year="2024" class="cal" HighlightedDates="highlightedDates"
-        OnDateClick="HandleDateClick" />
-</div>
-<div class="data">
-    <h3>Attendance Report for {classname}</h3>
-    <button @onclick="calculateAttendance">Calculate Attendance</button>
-    <table>
-        <tbody>
-            <tr>
-                <th>Student ID</th>
-                <th>Student Name</th>
-                <th>Present Attended</th>
-            </tr>
-            @{
-                foreach (var date in highlightedDates)
-                {
-                    foreach (var studentID in studentAttendance.Keys)
-                    {
-                        <tr>
-                            <td>@studentID</td>
-                            <td>Student name</td>
-                            <td> @studentAttendance[studentID] </td>
-                        </tr>
+        @if (showReport)
+        {
+            <p>Total Classes: @totalClasses</p>
+        
+            <table>
+                <tbody>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Days Attended</th>
+                    </tr>
+                    @{
+                        foreach (var studentID in studentAttendance.Keys)
+                        {
+                            var student = studentAttendance[studentID];
+                            <tr>
+                                <td>@studentID</td>
+                                <td>@student.StudentName</td>
+                                <td>@student.DaysAttended </td>
+                            </tr>
+                        }
                     }
-                }
-            }
-        </tbody>
-    </table>
+                </tbody>
+            </table>
+        }
+    </div>
 </div>
 
 @code {
 
-    private string principalName;
-    private string classname;
-    private bool showButtons = false;
+    private string principalName = string.Empty;
+    private string classname = string.Empty;
+    private bool showReport = false;
     private StudentClass? studentClass;
     private List<DateOnly> highlightedDates = new List<DateOnly>();
 
-    private Dictionary<string, int> studentAttendance = new Dictionary<string, int>();
+    private Dictionary<string, StudentAttendance> studentAttendance = new Dictionary<string, StudentAttendance>();
     private Dictionary<string, string> studentNames = new Dictionary<string, string>();
     private int totalClasses = 0;
-    protected override async Task OnInitializedAsync()
+
+    protected override void OnInitialized()
     {
-        principalName = BlazorNonceService.Nonce;
+        principalName = BlazorNonceService.Nonce ?? String.Empty;
         principalName = "nagendra@bu.edu";
-        classname = StudentClass.lookupClassName(principalName).FirstOrDefault();
+        classname = StudentClass.lookupClassName(principalName).FirstOrDefault() ?? String.Empty;
         classname = "519fall2024";
         studentClass = new StudentClass(classname);
         if (classname != null)
         {
-            showButtons = true;
 
             highlightedDates = StudentClass.getSchedule(classname);
 
@@ -85,29 +89,59 @@
 
     private async Task calculateAttendance()
     {
+        if (studentClass == null)
+        {
+            return;
+        } 
+        Console.WriteLine("Calculating attendance");
+        showReport = true;
+
         Dictionary<DateOnly, Dictionary<string, bool>> attendanceRecords = new Dictionary<DateOnly, Dictionary<string, bool>>();
         Dictionary<string, bool> StudentIds = new Dictionary<string, bool>();
         List<string> students = new List<string>();
-            
+
+        @* Console.WriteLine ("Checking attendance for each date"); *@
+        var allStudentList = new List<Student>();
+
+        allStudentList = await studentClass.LoadStudentsAsync();
+
+        // Set attendance to 0 for each student
+        foreach (var student in allStudentList)
+        {
+            studentAttendance[student.BUID]= new StudentAttendance { DaysAttended = 0, StudentName = student.Name };
+        }
+
         foreach (var date in highlightedDates)
         {
-            var attendance = await studentClass?.GetAttendanceForDateAsync(date) ?? new List<StudentAttendance>();
+            @* Console.WriteLine($"Checking attendance for {date}"); *@
+            var datestr = date.ToString("MMMddyyyy");
+            var attendance = await studentClass.LoadStudentDataAsync(datestr);
 
-            // Make a list of student ids that day and whether they were present
-            StudentIds = attendance.ToDictionary(x => x.StudentId, x => x.IsPresent);
-
-            // merge the list of student ids in the class into students, making sure they are unique
-            students = students.Union(StudentIds.Keys).ToList();
-
-            // Keep track of each student's total attendance
-            foreach (var student in StudentIds.Keys)
+            @* Console.WriteLine($"Attendance for {date} has {attendance.Count} students"); *@
+ 
+            // update student's attendance in the list
+            foreach (var student in attendance)
             {
-                studentAttendance[student] = studentAttendance.ContainsKey(student) ? studentAttendance[student] + (StudentIds[student] ? 1:0) : 1;
+                if (studentAttendance.ContainsKey(student.BUID))
+                {
+                    studentAttendance[student.BUID].DaysAttended += student.Present ? 1 : 0;
+                }
+                else
+                {
+                    studentAttendance[student.BUID] = new StudentAttendance { DaysAttended = student.Present ? 1 : 0 };
+                }
+                @* Console.WriteLine($"Student {student.BUID} has attended {studentAttendance[student.BUID]} classes"); *@
             }
-
-            // Keep track of each student's attendance for each day
-            attendanceRecords[date] = StudentIds;
+ 
         }
+
+        @* foreach (var student in allStudentList)
+        {
+            if (!studentAttendance.ContainsKey(student.BUID))
+            {
+                studentAttendance[student.BUID].StudentName = student.Name;
+            }
+        } *@
 
         // Calculate the total number of classes
         totalClasses = highlightedDates.Count;

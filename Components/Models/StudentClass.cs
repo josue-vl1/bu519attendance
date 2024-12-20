@@ -209,6 +209,7 @@ namespace attendance.Components.Models
                             status += $" - {attendance.Count} students found";
                             foreach (var student in attendance)
                             {
+//                                Console.WriteLine($"Student: {student.BUID} - Present: {student.Present} - Exempt: {student.Exempt}");
                                 var index = students.FindIndex(x => x.BUID == student.BUID);
                                 if (index != -1)
                                 {
@@ -232,7 +233,7 @@ namespace attendance.Components.Models
                 Console.WriteLine($"Error loading student data: {e.Message}");
                 status += " - Error loading student data: " + e.Message;
             }
-
+//Console.WriteLine($"Returning students : {students.Count}");
             return students;
         }
 

@@ -6,6 +6,7 @@ namespace attendance.Components.Models
         public string StudentId { get; set; }
         public string StudentName { get; set; }
         public bool IsPresent { get; set; }
+        public int DaysAttended { get; set; }
 
     }
 }
