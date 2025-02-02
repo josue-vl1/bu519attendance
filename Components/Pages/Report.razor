@@ -8,13 +8,13 @@
 <PageTitle>Report</PageTitle>
 <div class="sidexside">
     <div class="cals">
-        <CalendarMonth Month="9" Year="2024" class="cal" HighlightedDates="highlightedDates"
+        <CalendarMonth Month="1" Year="2025" class="cal" HighlightedDates="highlightedDates"
             OnDateClick="HandleDateClick" />
-        <CalendarMonth Month="10" Year="2024" class="cal" HighlightedDates="highlightedDates"
+        <CalendarMonth Month="2" Year="2025" class="cal" HighlightedDates="highlightedDates"
             OnDateClick="HandleDateClick" />
-        <CalendarMonth Month="11" Year="2024" class="cal" HighlightedDates="highlightedDates"
+        <CalendarMonth Month="3" Year="2025" class="cal" HighlightedDates="highlightedDates"
             OnDateClick="HandleDateClick" />
-        <CalendarMonth Month="12" Year="2024" class="cal" HighlightedDates="highlightedDates"
+        <CalendarMonth Month="4" Year="2025" class="cal" HighlightedDates="highlightedDates"
             OnDateClick="HandleDateClick" />
     </div>
     <div class="data">
@@ -66,7 +66,7 @@
         principalName = BlazorNonceService.Nonce ?? String.Empty;
         principalName = "nagendra@bu.edu";
         classname = StudentClass.lookupClassName(principalName).FirstOrDefault() ?? String.Empty;
-        classname = "519fall2024";
+        classname = "519spring2025";
         studentClass = new StudentClass(classname);
         if (classname != null)
         {

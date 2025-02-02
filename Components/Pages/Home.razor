@@ -59,7 +59,7 @@ else
                     var status = students[studentnumber].Present ? "present" : "absent";
                     var deco = students[studentnumber].Present ? "style=\"border: 5px solid green\"" : "";
                     <div class="student @status" @onclick="() => TogglePresent(localStudentNumber)">
-                        <img src="https://studentinfo.blob.core.windows.net/519fall2024/@(students[studentnumber].BUID).jpg" width="90"
+                        <img src="https://studentinfo.blob.core.windows.net/519spring2025/@(students[studentnumber].BUID).jpg" width="90"
                             height="90" style="@(students[studentnumber].Present ? "border: 5px solid green" : "");" />
                         <div class="studentinfo">
                             @students[studentnumber].Name
@@ -144,7 +144,7 @@ else
     // using System.Text.Encodings.Web;
     private void GenerateAvailableDates()
     {
-        DateTime startDate = new DateTime(2024, 9, 9);
+        DateTime startDate = new DateTime(2025, 1, 27);
         for (int i = 0; i < 13; i++) // Generate dates for one year
         {
             availableDates.Add(startDate.AddDays(i * 7));

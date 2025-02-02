@@ -66,8 +66,11 @@ namespace attendance.Components.Models
                 Console.WriteLine("Error creating container: " + e.Message);
             }
 
-            scheduleData["519fall2024"] = new ClassInfo("0 0 * * 1", new DateTime(2024, 09, 03), new DateTime(2024, 12, 31),
+            //scheduleData["519fall2024"] = new ClassInfo("0 0 * * 1", new DateTime(2025, 09, 30), new DateTime(2022, 12, 31),
+            //        new List<string> { "nagendra@bu.edu", "langd0n@bu.edu", "matzh@bu.edu" });
+            scheduleData["519spring2025"] = new ClassInfo("0 0 * * 1", new DateTime(2025, 01, 27), new DateTime(2025, 12, 31),
                     new List<string> { "nagendra@bu.edu", "langd0n@bu.edu", "matzh@bu.edu" });
+
         }
 
         public static List<DateOnly> getSchedule(string classname)

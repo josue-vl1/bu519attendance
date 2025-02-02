@@ -8,6 +8,7 @@
 @using System.Text.Json;
 @using System.Text;
 
+
 @inject BlazorNonceService BlazorNonceService
 
 @attribute [StreamRendering]
@@ -142,28 +143,53 @@
             Console.WriteLine($"JSON deserialization error: {ex.Message}");
         }
 
+        // clear the list of students
+        unimported.Clear();
+
 
         foreach (var d in outputData.students)
         {
             Console.WriteLine($"{d.firstname} {d.lastname} {d.id}");
+            var s = new attendance.Components.Models.Student();
+            s.Name = $"{d.firstname} {d.lastname}";
+            s.BUID = d.id.ToString();
+            unimported.Add(s);
         }
 
     }
 
+    static List<attendance.Components.Models.Student> unimported = new List<attendance.Components.Models.Student>();
     private async Task import()
     {
+        StudentClass sc = new StudentClass(classname);
+        List<Student> list = await sc.LoadStudentsAsync();
+
+        foreach (var newStudent in unimported)
+        {
+        //    Console.WriteLine($"{d.firstname} {d.lastname} {d.id}");
+        
+            if (!string.IsNullOrWhiteSpace(newStudent.Name) && !string.IsNullOrWhiteSpace(newStudent.BUID))
+            {
+                list.Add(newStudent);
+            }
+        }
+        await sc.SaveStudentsAsync();
     }
 
     public class dataList {
-        public List<Student> students { get; set; } = new List<Student>();
+        public List<blStudent> students {get; set; }
+
+        public dataList() {
+            students = new List<blStudent>{};
+        }
     }
 
-    public class Student
-    {
-        public string firstname { get; set; }
-        public string lastname { get; set; }
-        public string id { get; set; }
+    public class blStudent {
+        public string? firstname {get; set;}
+        public string? lastname {get; set;}
+        public string? id {get; set;}
     }
+
 }
 
 
