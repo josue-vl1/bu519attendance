@@ -100,10 +100,7 @@ else
     private bool saving = false;
     private bool showButtons = false;
     private bool showStudents = false;
-    private string allHeaders = "--init--";
-    private string error = "";
     private string principalName = "foo";
-    private bool pageIsInitialized = false; // Flag to track initialization
 
     // make a static list of dates, every monday starting on Sept 9th
     private List<DateTime> availableDates = new List<DateTime>();
@@ -126,16 +123,32 @@ else
             showButtons = true;
         }
 
-        GenerateAvailableDates();
+        studentClass = new StudentClass(classname);
+
+        availableDates.Clear();
+        if (studentClass.scheduledDates.Count > 0)
+        {
+            foreach (var day in studentClass.scheduledDates)
+            {
+                availableDates.Add(day.ToDateTime(new TimeOnly(0, 0)));
+            }
+        }
+        else {
+            DateTime startDate = new DateTime(2025, 1, 27);
+            for (int i = 0; i < 13; i++) // Generate dates for one year
+            {
+                availableDates.Add(startDate.AddDays(i * 7));
+            }
+        }
+
+
 
         // Set the default date to the closest date in the list
         selectedDate = availableDates.OrderBy(x => Math.Abs((x - DateTime.Now).TotalDays)).First().ToString("yyyy-MM-dd");
         loading = true;
 
-        studentClass = new StudentClass(classname);
 
         students = await studentClass.LoadStudentsAsync();
-//        Task.Run(() => LoadStudentsAsync()).GetAwaiter().GetResult();
         // sort by name
         students = students.OrderBy(x => x.Name).ToList();
         loading = false;
@@ -143,9 +156,20 @@ else
         StateHasChanged();
     }
 
-    // using System.Text.Encodings.Web;
-    private void GenerateAvailableDates()
+    private void GenerateAvailableDates(string classname)
     {
+        availableDates.Clear();
+        var days = studentClass.getSchedule(classname);
+        if (days.Count > 0)
+        {
+            foreach (var day in days)
+            {
+                availableDates.Add(day.ToDateTime(new TimeOnly(0, 0)));
+            }
+            return;
+        }
+
+
         DateTime startDate = new DateTime(2025, 1, 27);
         for (int i = 0; i < 13; i++) // Generate dates for one year
         {
