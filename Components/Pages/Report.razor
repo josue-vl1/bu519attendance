@@ -8,13 +8,13 @@
 <PageTitle>Report</PageTitle>
 <div class="sidexside">
     <div class="cals">
-        <CalendarMonth Month="1" Year="2025" class="cal" HighlightedDates="highlightedDates"
+        <CalendarMonth Month="9" Year="2025" class="cal" HighlightedDates="highlightedDates"
             OnDateClick="HandleDateClick" />
-        <CalendarMonth Month="2" Year="2025" class="cal" HighlightedDates="highlightedDates"
+        <CalendarMonth Month="10" Year="2025" class="cal" HighlightedDates="highlightedDates"
             OnDateClick="HandleDateClick" />
-        <CalendarMonth Month="3" Year="2025" class="cal" HighlightedDates="highlightedDates"
+        <CalendarMonth Month="11" Year="2025" class="cal" HighlightedDates="highlightedDates"
             OnDateClick="HandleDateClick" />
-        <CalendarMonth Month="4" Year="2025" class="cal" HighlightedDates="highlightedDates"
+        <CalendarMonth Month="12" Year="2025" class="cal" HighlightedDates="highlightedDates"
             OnDateClick="HandleDateClick" />
     </div>
     <div class="data">
@@ -64,19 +64,14 @@
     protected override void OnInitialized()
     {
         principalName = BlazorNonceService.Nonce ?? String.Empty;
-        principalName = "nagendra@bu.edu";
+        //principalName = "nagendra@bu.edu";
         classname = StudentClass.lookupClassName(principalName).FirstOrDefault() ?? String.Empty;
-        classname = "519spring2025";
-        studentClass = new StudentClass(classname);
+        //classname = "519spring2025";
+        classname = Environment.GetEnvironmentVariable("CLASSFOLDER") ?? "Classes";
         if (classname != null)
         {
-
-            highlightedDates = StudentClass.getSchedule(classname);
-
-            @* foreach (var date in highlightedDates)
-            {
-                Console.WriteLine(date);
-            } *@
+            studentClass = new StudentClass(classname);
+            highlightedDates = studentClass.scheduledDates;
         }
     }
 
