@@ -112,6 +112,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        classname = Environment.GetEnvironmentVariable("CLASSFOLDER") ?? "Classes";
+
         if (classname == null)
         {
             return;

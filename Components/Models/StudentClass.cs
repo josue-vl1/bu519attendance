@@ -68,8 +68,22 @@ namespace attendance.Components.Models
 
             //scheduleData["519fall2024"] = new ClassInfo("0 0 * * 1", new DateTime(2025, 09, 30), new DateTime(2022, 12, 31),
             //        new List<string> { "nagendra@bu.edu", "langd0n@bu.edu", "matzh@bu.edu" });
-            scheduleData["519spring2025"] = new ClassInfo("0 0 * * 1", new DateTime(2025, 01, 27), new DateTime(2025, 12, 31),
-                    new List<string> { "nagendra@bu.edu", "langd0n@bu.edu", "matzh@bu.edu" });
+            //scheduleData["519spring2025"] = new ClassInfo("0 0 * * 1", new DateTime(2025, 01, 27), new DateTime(2025, 12, 31),
+            //        new List<string> { "nagendra@bu.edu", "langd0n@bu.edu", "matzh@bu.edu" });
+            //var classInfo = @"{""Schedule"": ""0 0 * * 1"", ""StartDate"": ""2025-01-27T00:00:00"", ""EndDate"": ""2025-12-31T00:00:00"", ""Instructors"": [""nagendra@bu.edu"", ""langd0n@bu.edu"", ""matzh@bu.edu""]}";
+            //var info = System.Text.Json.JsonSerializer.Deserialize<ClassInfo>(classInfo);
+            //scheduleData["519spring2025"] = info;
+
+            //Environment.GetEnvironmentVariable
+            var info= Environment.GetEnvironmentVariable("CLASSINFO_JSON");
+            var classfolder = Environment.GetEnvironmentVariable("CLASSFOLDER") ?? "Classes";
+            if (!string.IsNullOrEmpty(info)) {
+                var classInfo2 = System.Text.Json.JsonSerializer.Deserialize<ClassInfo>(info);
+                if (classInfo2 != null && !string.IsNullOrEmpty(classInfo2.Schedule))
+                {
+                    scheduleData[classfolder] = classInfo2;
+                }
+            }
 
         }
 
