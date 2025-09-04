@@ -59,7 +59,7 @@ else
                     var status = students[studentnumber].Present ? "present" : "absent";
                     var deco = students[studentnumber].Present ? "style=\"border: 5px solid green\"" : "";
                     <div class="student @status" @onclick="() => TogglePresent(localStudentNumber)">
-                        <img src="https://studentinfo.blob.core.windows.net/519spring2025/@(students[studentnumber].BUID).jpg" width="90"
+                        <img src="https://studentinfo.blob.core.windows.net/@(classname)/@(students[studentnumber].BUID).jpg" width="90"
                             height="90" style="@(students[studentnumber].Present ? "border: 5px solid green" : "");" />
                         <div class="studentinfo">
                             @students[studentnumber].Name
