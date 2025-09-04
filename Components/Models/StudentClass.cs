@@ -40,6 +40,7 @@ namespace attendance.Components.Models
 
         public string error = "";
         public string status = "";
+        public List<DateOnly> scheduledDates = new List<DateOnly>();
 
         private static Dictionary<string, ClassInfo> scheduleData = new Dictionary<string, ClassInfo>();
 
@@ -82,12 +83,16 @@ namespace attendance.Components.Models
                 if (classInfo2 != null && !string.IsNullOrEmpty(classInfo2.Schedule))
                 {
                     scheduleData[classfolder] = classInfo2;
+
+                    var cronSchedule = CrontabSchedule.Parse(classInfo2.Schedule);
+                    var occurrence = cronSchedule.GetNextOccurrences(classInfo2.StartDate, classInfo2.EndDate);
+
+                    scheduledDates = occurrence.Select(x => DateOnly.FromDateTime(x.Date)).ToList();
                 }
             }
-
         }
 
-        public static List<DateOnly> getSchedule(string classname)
+        public List<DateOnly> getSchedule(string classname)
         {
             List<DateOnly> schedule = new List<DateOnly>();
 
