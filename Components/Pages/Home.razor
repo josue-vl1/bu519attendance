@@ -50,6 +50,10 @@ else
             {
                 @for (int j = 0; j < 8; j++, studentnumber++)
                 {
+                    if ( studentnumber >= students.Count)
+                    {
+                        break;
+                    }
                     if (students[studentnumber].IsInactive)
                     {
                         continue;
@@ -102,7 +106,7 @@ else
     private bool showStudents = false;
     private string principalName = "foo";
 
-    // make a static list of dates, every monday starting on Sept 9th
+    // make a static list of dates based on the schedule
     private List<DateTime> availableDates = new List<DateTime>();
 
     List<Student> students = new List<Student>();
@@ -156,7 +160,7 @@ else
         StateHasChanged();
     }
 
-    private void GenerateAvailableDates(string classname)
+    <!-- private void GenerateAvailableDates(string classname)
     {
         availableDates.Clear();
         var days = studentClass.getSchedule(classname);
@@ -175,7 +179,7 @@ else
         {
             availableDates.Add(startDate.AddDays(i * 7));
         }
-    }
+    } -->
 
     private async Task OnDateChanged(ChangeEventArgs e)
     {
