@@ -88,6 +88,19 @@
 
     private async Task makeCall() {
 
+        var URL = Environment.GetEnvironmentVariable("OPENAI_ENDPOINT");
+        if (URL == null)
+        {
+            Console.WriteLine("No OPENAI_ENDPOINT environment variable set");
+            //return;
+        }
+        var model = Environment.GetEnvironmentVariable("OPENAI_DEPLOYMENT");
+        if (model == null)
+        {
+            Console.WriteLine("No OPENAI_DEPLOYMENT environment variable set");
+            //return;
+        }
+
         string targetJson = "a JSON with key students value is array containing elements with firstname, lastname and id";
         string prompt = $"Can you pull out all of the names of enrolled students from this text. Return the results in this JSON format: {targetJson} . DATA: ";
 
@@ -122,7 +135,8 @@
         // Ensure the Content-Type header is set correctly
         content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
 
-        var response = await httpClient.PostAsync("https://nvmopenai.openai.azure.com/openai/deployments/gpt-35-turbo-16k/chat/completions?api-version=2024-02-15-preview", content);
+
+        var response = await httpClient.PostAsync($"{URL}/openai/deployments/{model}/chat/completions?api-version=2024-02-15-preview", content);
         var responseString = await response.Content.ReadAsStringAsync();
  //       Console.WriteLine(responseString);
 
