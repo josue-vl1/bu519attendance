@@ -12,13 +12,13 @@ namespace attendance.Services
             Console.WriteLine("got a context");
         }
 
-        public HttpContext HttpContext => _httpContextAccessor.HttpContext;
+        public HttpContext? HttpContext => _httpContextAccessor.HttpContext;
 
         public string GetHeader(string headerName)
         {
             try {
-                var val = _httpContextAccessor.HttpContext.Request.Headers[headerName].ToString();
-                if (val == null || val.Length == 0) {
+                var val = _httpContextAccessor.HttpContext?.Request.Headers[headerName].ToString();
+                if (string.IsNullOrEmpty(val)) {
                     return "unknown";
                 }
                 return val;
@@ -37,6 +37,6 @@ namespace attendance.Services
             return string.Join(", ", _httpContextAccessor.HttpContext.Request.Headers.Select(h => $"{h.Key}: {h.Value}"));
 
         }
-        public ISession Session => _httpContextAccessor.HttpContext?.Session;
+        public ISession? Session => _httpContextAccessor.HttpContext?.Session;
     }
 }

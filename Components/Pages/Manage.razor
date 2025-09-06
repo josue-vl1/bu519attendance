@@ -102,33 +102,37 @@ else
 
 @code {
     private bool loading = false;
-    private string classname = "";
+    private string classname = string.Empty;
     private bool saving = false;
     private bool showButtons = false;
-    private string principalName = "foo";
-    private bool error = false;
+    private string principalName = string.Empty;
     private StudentClass? studentClass;
     private Student newStudent = new Student();
     List<Student> students = new List<Student>();
 
     protected override async Task OnInitializedAsync()
     {
-        principalName = BlazorNonceService.Nonce;
-        //principalName = "nagendra@bu.edu";
-        classname = StudentClass.lookupClassName(principalName).FirstOrDefault();
-        if (classname != null)
-        {
-            showButtons = true;
-        }
-
+        classname = Environment.GetEnvironmentVariable("CLASSFOLDER") ?? "Classes";
+        principalName = BlazorNonceService?.Nonce ?? string.Empty;
         studentClass = new StudentClass(classname);
-        loading = true;
-        students = await studentClass.LoadStudentsAsync();
-        loading = false;
+        
+        if (!string.IsNullOrEmpty(principalName))
+        {
+            var tempClassName = studentClass.lookupClassName(principalName).FirstOrDefault() ?? string.Empty;
+            if (!string.IsNullOrEmpty(tempClassName))
+            {
+                classname = tempClassName;
+                showButtons = true;
+                
+                loading = true;
+                students = await studentClass.LoadStudentsAsync();
+                loading = false;
 
-        // sort by name
-        students = students.OrderBy(x => x.Name).ToList();
-        StateHasChanged();
+                // sort by name
+                students = students.OrderBy(x => x.Name).ToList();
+                StateHasChanged();
+            }
+        }
     }
 
     private async Task ToggleEditAsync(Student student)
@@ -152,6 +156,8 @@ else
 
     private async Task SerializeStudentsAsync()
     {
+        if (studentClass == null) return;
+        
         saving = true;
         studentClass.Students = students;
         await studentClass.SaveStudentsAsync();

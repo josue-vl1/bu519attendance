@@ -32,8 +32,8 @@ namespace attendance.Components.Models
         public string ClassName { get => className; set => className = value; }
         public List<Student> Students { get => students; set => students = value; }
 
-        private Uri containerUri;
-        private Uri blobUri;
+        private Uri? containerUri;
+        private Uri? blobUri;
         private Azure.Identity.DefaultAzureCredential? credential = null;
 
         private HttpClient httpClient = new HttpClient();
@@ -111,7 +111,7 @@ namespace attendance.Components.Models
             return schedule;
         }
 
-        public static List<string> lookupClassName(string principalName)
+        public List<string> lookupClassName(string principalName)
         {
 
             List<string> classnames = new List<string>();
@@ -128,7 +128,7 @@ namespace attendance.Components.Models
 
             foreach (var item in scheduleData)
             {
-                if (item.Value.Instructors.Contains(principalName))
+                //if (item.Value.Instructors.Contains(principalName))
                 {
                     classnames.Add(item.Key);
                 }

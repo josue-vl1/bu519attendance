@@ -7,6 +7,7 @@
 @using static System.Environment;
 @using System.Text.Json;
 @using System.Text;
+@inject ILogger<BulkLoad> Logger
 
 
 @inject BlazorNonceService BlazorNonceService
@@ -27,6 +28,9 @@
 
 @if (showOutput)
 {
+    <h1>Review the output data:</h1>
+    <p>@statusMessage</p>
+    <hr>
     <table>
         <tr><td>
             <h3>Output:</h3>
@@ -39,13 +43,19 @@
                     </tr>
                 </thead>
                 <tbody>
-                @foreach (var d in outputData.students)
+                @if ( outputData.students == null || outputData.students.Count == 0)
                 {
-                    <tr>
-                        <td>@d.firstname</td>
-                        <td>@d.lastname</td>
-                        <td>@d.id</td>
-                    </tr>
+                    <tr><td colspan="3">No students found.</td></tr>
+                }
+                else {
+                    foreach (var d in outputData.students)
+                    {
+                        <tr>
+                            <td>@d.firstname</td>
+                            <td>@d.lastname</td>
+                            <td>@d.id</td>
+                        </tr>
+                    }
                 }
                 </tbody>
             </table>
@@ -68,54 +78,34 @@
     private string inputData = "";
     private dataList outputData = new dataList();
     private bool showOutput = false;
-    private bool IdentifyAdds = true;
-    private bool IdentifyDeletes = true;
-    private HttpClient httpClient = new HttpClient();
-    private string principalName;
-    private string classname;
+    //private bool IdentifyAdds = true;
+    //private bool IdentifyDeletes = true;
+    private string principalName = string.Empty;
+    private string classname = string.Empty;
+    private StudentClass? studentClass;
     private bool showButtons = false;
+    private string statusMessage = "";
 
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        principalName = BlazorNonceService.Nonce;
-        classname = StudentClass.lookupClassName(principalName).FirstOrDefault();
-        if (classname != null)
+        classname = Environment.GetEnvironmentVariable("CLASSFOLDER") ?? "Classes";
+        principalName = BlazorNonceService?.Nonce ?? string.Empty; 
+        studentClass = new StudentClass(classname);
+
+        var tempClassName = studentClass.lookupClassName(principalName).FirstOrDefault() ?? string.Empty;
+        if (!string.IsNullOrEmpty(tempClassName))
         {
+            classname = tempClassName;
             showButtons = true;
         }
     }
 
     private async Task makeCall() {
-
-        var URL = Environment.GetEnvironmentVariable("OPENAI_ENDPOINT");
-        if (URL == null)
-        {
-            Console.WriteLine("No OPENAI_ENDPOINT environment variable set");
-            //return;
-        }
-        var model = Environment.GetEnvironmentVariable("OPENAI_DEPLOYMENT");
-        if (model == null)
-        {
-            Console.WriteLine("No OPENAI_DEPLOYMENT environment variable set");
-            //return;
-        }
-
         string targetJson = "a JSON with key students value is array containing elements with firstname, lastname and id";
         string prompt = $"Can you pull out all of the names of enrolled students from this text. Return the results in this JSON format: {targetJson} . DATA: ";
-
-        // Get a token credential
-        var tokenCredential = new DefaultAzureCredential();
-        var token = tokenCredential.GetToken(new TokenRequestContext(new[] { "https://cognitiveservices.azure.com" }));
-
-
-        httpClient.DefaultRequestHeaders.Add("Authorization", "bearer " + token.Token);
-        //httpClient.DefaultRequestHeaders.Add("Content-Type", "application/json");
-            // Escape special characters in inputData
         string escapedInputData = JsonSerializer.Serialize(inputData).Trim('"');
-
-//        Console.WriteLine(inputData);
-        var c = $@"
+        var content = $@"
         {{
             ""messages"": [
                 {{""role"":""system"",""content"":""You are an AI assistant that helps people find information."" }},
@@ -129,46 +119,63 @@
             ""stop"": null
         }}";
 
-   //     Console.WriteLine(c);
-        var content = new StringContent(c, Encoding.UTF8, "application/json");
+        var endpoint = new OpenaiEndpoint(Logger);
 
-        // Ensure the Content-Type header is set correctly
-        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+        showOutput = true;
 
-
-        var response = await httpClient.PostAsync($"{URL}/openai/deployments/{model}/chat/completions?api-version=2024-02-15-preview", content);
-        var responseString = await response.Content.ReadAsStringAsync();
- //       Console.WriteLine(responseString);
-
-        var responseJson = JsonSerializer.Deserialize<JsonElement>(responseString);
+        // output the content field
+        var responseJson = await endpoint.PostAsync(content);
         
-        // output the content fild 
-        var choices = responseJson.GetProperty("choices");
+        try 
+        {
+            
+            var choices = responseJson.GetProperty("choices");
+            if (!choices.EnumerateArray().Any())
+            {
+                statusMessage = "Error: choices does not exist in response from the AI service.";
+                Logger.LogError(statusMessage);
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = "Error: Invalid response from the AI service: " + ex.Message + ".   " + content;
+            Logger.LogError($"{statusMessage} Details: {ex.Message}");
+            return;
+        }
+
+        <!-- var choices = responseJson.GetProperty("choices");
         var message = choices[0].GetProperty("message");
         var rcontent = message.GetProperty("content").ToString();
-        Console.WriteLine(rcontent);
+        Logger.LogInformation(rcontent);
         try
         {
-            outputData = JsonSerializer.Deserialize<dataList>(rcontent);
+            outputData = JsonSerializer.Deserialize<dataList>(rcontent) ?? new dataList();
             showOutput = true;
         }
         catch (JsonException ex)
         {
-            Console.WriteLine($"JSON deserialization error: {ex.Message}");
-        }
+            Logger.LogError($"JSON deserialization error: {ex.Message}");
+        } 
+        statusMessage = $"Found {outputData.students.Count} students.";
 
         // clear the list of students
         unimported.Clear();
 
-
-        foreach (var d in outputData.students)
+        foreach (var d in outputData?.students ?? new List<blStudent>())
         {
-            Console.WriteLine($"{d.firstname} {d.lastname} {d.id}");
-            var s = new attendance.Components.Models.Student();
-            s.Name = $"{d.firstname} {d.lastname}";
-            s.BUID = d.id.ToString();
-            unimported.Add(s);
-        }
+             Logger.LogInformation($"Found student: {d?.firstname} {d?.lastname} {d?.id}");
+            var s = new blStudent { firstname = d?.firstname, lastname = d?.lastname, id = d?.id };
+            outputData.students.Add(s);
+            unimported.Add(new attendance.Components.Models.Student
+            {
+                Name = $"{d?.firstname} {d?.lastname}".Trim(),
+                BUID = d?.id ?? string.Empty
+            }); 
+        } -->
+
+
+        //outputData.students.Add(new blStudent { firstname = "Test Student", lastname = "Doe", id = "123456789" });
 
     }
 
@@ -178,16 +185,23 @@
         StudentClass sc = new StudentClass(classname);
         List<Student> list = await sc.LoadStudentsAsync();
 
-        foreach (var newStudent in unimported)
+        if (list != null)
         {
-        //    Console.WriteLine($"{d.firstname} {d.lastname} {d.id}");
-        
-            if (!string.IsNullOrWhiteSpace(newStudent.Name) && !string.IsNullOrWhiteSpace(newStudent.BUID))
+            foreach (var newStudent in unimported)
             {
-                list.Add(newStudent);
+            //    Console.WriteLine($"{d.firstname} {d.lastname} {d.id}");
+            
+                if (!string.IsNullOrWhiteSpace(newStudent.Name) && !string.IsNullOrWhiteSpace(newStudent.BUID))
+                {
+                    list.Add(newStudent);
+                }
             }
+            await sc.SaveStudentsAsync();
         }
-        await sc.SaveStudentsAsync();
+        else
+        {
+            Logger.LogError("Student list is null. Cannot import students.");
+        }
     }
 
     public class dataList {

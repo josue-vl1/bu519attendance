@@ -4,8 +4,8 @@ namespace attendance.Components.Models
 {
     public class Student
     {
-        public string Name { get; set; }
-        public string BUID { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string BUID { get; set; } = string.Empty;
 
         [JsonIgnore]
         public bool Present { get; set; }

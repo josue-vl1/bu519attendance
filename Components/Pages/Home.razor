@@ -75,7 +75,6 @@ else
                                     <input type="checkbox" @bind="students[studentnumber].Exempt" />
                                     Exempt
                                 </div>
-
                             }
                         </div>
                     </div>
@@ -96,9 +95,9 @@ else
 
 @code {
 
-    private string selectedDate;
+    private string selectedDate = string.Empty;
     private string status = "";
-    private string classname="";
+    private string classname = string.Empty;
     private StudentClass? studentClass;
     private bool loading = false;
     private bool saving = false;
@@ -114,50 +113,43 @@ else
     protected override async Task OnInitializedAsync()
     {
         classname = Environment.GetEnvironmentVariable("CLASSFOLDER") ?? "Classes";
-
-        if (classname == null)
-        {
-            return;
-        }
-        principalName= BlazorNonceService?.Nonce ?? String.Empty; 
-
-        classname = StudentClass.lookupClassName(principalName).FirstOrDefault();
-        if (classname != null)
-        {
-            showButtons = true;
-        }
-
+        principalName = BlazorNonceService?.Nonce ?? string.Empty; 
         studentClass = new StudentClass(classname);
 
-        availableDates.Clear();
-        if (studentClass.scheduledDates.Count > 0)
+        var tempClassName = studentClass.lookupClassName(principalName).FirstOrDefault() ?? string.Empty;
+        if (!string.IsNullOrEmpty(tempClassName))
         {
-            foreach (var day in studentClass.scheduledDates)
+            classname = tempClassName;
+            showButtons = true;
+
+            availableDates.Clear();
+            if (studentClass.scheduledDates.Count > 0)
             {
-                availableDates.Add(day.ToDateTime(new TimeOnly(0, 0)));
+                foreach (var day in studentClass.scheduledDates)
+                {
+                    availableDates.Add(day.ToDateTime(new TimeOnly(0, 0)));
+                }
             }
-        }
-        else {
-            DateTime startDate = new DateTime(2025, 1, 27);
-            for (int i = 0; i < 13; i++) // Generate dates for one year
+            else 
             {
-                availableDates.Add(startDate.AddDays(i * 7));
+                DateTime startDate = new DateTime(2025, 1, 27);
+                for (int i = 0; i < 13; i++) // Generate dates for one year
+                {
+                    availableDates.Add(startDate.AddDays(i * 7));
+                }
             }
-        }
 
+            // Set the default date to the closest date in the list
+            selectedDate = availableDates.OrderBy(x => Math.Abs((x - DateTime.Now).TotalDays)).First().ToString("yyyy-MM-dd");
+            loading = true;
 
+            students = await studentClass.LoadStudentsAsync();
+            // sort by name
+            students = students.OrderBy(x => x.Name).ToList();
+            loading = false;
 
-        // Set the default date to the closest date in the list
-        selectedDate = availableDates.OrderBy(x => Math.Abs((x - DateTime.Now).TotalDays)).First().ToString("yyyy-MM-dd");
-        loading = true;
-
-
-        students = await studentClass.LoadStudentsAsync();
-        // sort by name
-        students = students.OrderBy(x => x.Name).ToList();
-        loading = false;
-
-        StateHasChanged();
+            StateHasChanged();
+        }        
     }
 
     <!-- private void GenerateAvailableDates(string classname)
@@ -183,10 +175,16 @@ else
 
     private async Task OnDateChanged(ChangeEventArgs e)
     {
-        if (e == null || e.Value == null) selectedDate = availableDates[0].ToString("MMMddyyyy");
-        else selectedDate = e.Value.ToString();
+        if (e?.Value == null) 
+        {
+            selectedDate = availableDates.Count > 0 ? availableDates[0].ToString("MMMddyyyy") : string.Empty;
+        }
+        else 
+        {
+            selectedDate = e.Value.ToString() ?? string.Empty;
+        }
 
-        if (selectedDate == null || selectedDate == "")
+        if (string.IsNullOrEmpty(selectedDate))
         {
             showStudents = false;
             return;
@@ -196,16 +194,21 @@ else
         loading = true;
         showStudents = false;
         //StateHasChanged();
-        students = await studentClass.LoadStudentDataAsync(selectedDate);    //await LoadStudentDataAsync(selectedDate);
+        if (studentClass != null)
+        {
+            students = await studentClass.LoadStudentDataAsync(selectedDate);
+            status = studentClass.status;
+        }
         loading = false;
         showStudents = true;
-        status = studentClass.status;
         //StateHasChanged();
     }
 
     // Save student attence data to blob storage
     private async Task UpdateAttendanceAsync()
     {
+        if (studentClass == null) return;
+        
         saving = true;
         StateHasChanged();
         studentClass.Students = students;

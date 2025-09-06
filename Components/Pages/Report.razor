@@ -63,14 +63,14 @@
 
     protected override void OnInitialized()
     {
-        principalName = BlazorNonceService.Nonce ?? String.Empty;
-        //principalName = "nagendra@bu.edu";
-        classname = StudentClass.lookupClassName(principalName).FirstOrDefault() ?? String.Empty;
-        //classname = "519spring2025";
         classname = Environment.GetEnvironmentVariable("CLASSFOLDER") ?? "Classes";
+        principalName = BlazorNonceService.Nonce ?? String.Empty;
+        studentClass = new StudentClass(classname);
+        //principalName = "nagendra@bu.edu";
+        classname = studentClass.lookupClassName(principalName).FirstOrDefault() ?? String.Empty;
+        //classname = "519spring2025";
         if (classname != null)
         {
-            studentClass = new StudentClass(classname);
             highlightedDates = studentClass.scheduledDates;
         }
     }
