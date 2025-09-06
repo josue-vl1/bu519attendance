@@ -105,7 +105,8 @@
         string targetJson = "a JSON with key students value is array containing elements with firstname, lastname and id";
         string prompt = $"Can you pull out all of the names of enrolled students from this text. Return the results in this JSON format: {targetJson} . DATA: ";
         string escapedInputData = JsonSerializer.Serialize(inputData).Trim('"');
-        var content = $@"
+        //var content = $@"
+        <!-- 
         {{
             ""messages"": [
                 {{""role"":""system"",""content"":""You are an AI assistant that helps people find information."" }},
@@ -117,29 +118,59 @@
             ""presence_penalty"": 0,
             ""top_p"": 0.95,
             ""stop"": null
-        }}";
-
+        }}"; -->
+        
         var endpoint = new OpenaiEndpoint(Logger);
 
         showOutput = true;
 
         // output the content field
-        var responseJson = await endpoint.PostAsync(content);
+        var response = await endpoint.PostAsync2($"{prompt}{escapedInputData}");
         
         try 
         {
-            
-            var choices = responseJson.GetProperty("choices");
-            if (!choices.EnumerateArray().Any())
+            var responseJson = JsonSerializer.Deserialize<JsonElement>(response);
+            if (responseJson.ValueKind == JsonValueKind.Undefined)
             {
-                statusMessage = "Error: choices does not exist in response from the AI service.";
+                statusMessage = "Error: Response from the AI service is undefined.";
                 Logger.LogError(statusMessage);
                 return;
+            }
+
+            // list all the properties in the response for debugging
+            foreach (var property in responseJson.EnumerateObject())
+            {
+                //statusMessage += ($"Property: {property.Name}, Value: {property.Value}. ");
+
+                if ( property.Name == "Content" )
+                {
+                    // Handle the content property
+                    var rcontent = property.Value.ToString();
+                    statusMessage += "working with: " + rcontent + ".   ";
+                    var outputData = JsonSerializer.Deserialize<dataList>(rcontent) ?? new dataList();
+                    showOutput = true;
+
+                    unimported.Clear();
+
+                    foreach (var d in outputData?.students ?? new List<blStudent>())
+                    {
+                        statusMessage += ($"Found student: {d?.firstname} {d?.lastname} {d?.id}.  ");
+                        var s = new blStudent { firstname = d?.firstname, lastname = d?.lastname, id = d?.id };
+                        outputData.students.Add(s);
+                        unimported.Add(new attendance.Components.Models.Student
+                        {
+                            Name = $"{d?.firstname} {d?.lastname}".Trim(),
+                            BUID = d?.id ?? string.Empty
+                        }); 
+                    } 
+
+                    return;
+                }
             }
         }
         catch (Exception ex)
         {
-            statusMessage = "Error: Invalid response from the AI service: " + ex.Message + ".   " + content;
+            statusMessage += "Error: Invalid response from the AI service: " + ex.Message + ".   " + response;
             Logger.LogError($"{statusMessage} Details: {ex.Message}");
             return;
         }
@@ -158,21 +189,9 @@
             Logger.LogError($"JSON deserialization error: {ex.Message}");
         } 
         statusMessage = $"Found {outputData.students.Count} students.";
-
+-->
         // clear the list of students
-        unimported.Clear();
 
-        foreach (var d in outputData?.students ?? new List<blStudent>())
-        {
-             Logger.LogInformation($"Found student: {d?.firstname} {d?.lastname} {d?.id}");
-            var s = new blStudent { firstname = d?.firstname, lastname = d?.lastname, id = d?.id };
-            outputData.students.Add(s);
-            unimported.Add(new attendance.Components.Models.Student
-            {
-                Name = $"{d?.firstname} {d?.lastname}".Trim(),
-                BUID = d?.id ?? string.Empty
-            }); 
-        } -->
 
 
         //outputData.students.Add(new blStudent { firstname = "Test Student", lastname = "Doe", id = "123456789" });
