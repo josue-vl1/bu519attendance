@@ -73,19 +73,26 @@
     }
 </style>
 
-@code
-{
+@code {
     private string inputData = "";
-    private dataList outputData = new dataList();
+    private DataList outputData = new();
     private bool showOutput = false;
-    //private bool IdentifyAdds = true;
-    //private bool IdentifyDeletes = true;
     private string principalName = string.Empty;
     private string classname = string.Empty;
     private StudentClass? studentClass;
     private bool showButtons = false;
     private string statusMessage = "";
+    private static List<Student> unimported = new();
 
+    public class DataList {
+        public List<BlStudent> students { get; set; } = new();
+    }
+
+    public class BlStudent {
+        public string? firstname { get; set; }
+        public string? lastname { get; set; }
+        public string? id { get; set; }
+    }
 
     protected override void OnInitialized()
     {
@@ -105,31 +112,15 @@
         string targetJson = "a JSON with key students value is array containing elements with firstname, lastname and id";
         string prompt = $"Can you pull out all of the names of enrolled students from this text. Return the results in this JSON format: {targetJson} . DATA: ";
         string escapedInputData = JsonSerializer.Serialize(inputData).Trim('"');
-        //var content = $@"
-        <!-- 
-        {{
-            ""messages"": [
-                {{""role"":""system"",""content"":""You are an AI assistant that helps people find information."" }},
-                {{""role"":""user"",""content"":""{prompt}{escapedInputData}"" }}
-            ],
-            ""max_tokens"": 8000,
-            ""temperature"": 0.7,
-            ""frequency_penalty"": 0,
-            ""presence_penalty"": 0,
-            ""top_p"": 0.95,
-            ""stop"": null
-        }}"; -->
         
         var endpoint = new OpenaiEndpoint(Logger);
-
         showOutput = true;
 
-        // output the content field
-        var response = await endpoint.PostAsync2($"{prompt}{escapedInputData}");
-        
         try 
         {
+            var response = await endpoint.PostAsync2($"{prompt}{escapedInputData}");
             var responseJson = JsonSerializer.Deserialize<JsonElement>(response);
+            
             if (responseJson.ValueKind == JsonValueKind.Undefined)
             {
                 statusMessage = "Error: Response from the AI service is undefined.";
@@ -137,106 +128,97 @@
                 return;
             }
 
-            // list all the properties in the response for debugging
+            // Extract the actual JSON content from the response
+            string? jsonContent = null;
             foreach (var property in responseJson.EnumerateObject())
             {
-                //statusMessage += ($"Property: {property.Name}, Value: {property.Value}. ");
-
-                if ( property.Name == "Content" )
+                if (property.Name == "Content" && property.Value.ValueKind == JsonValueKind.Array)
                 {
-                    // Handle the content property
-                    var rcontent = property.Value.ToString();
-                    statusMessage += "working with: " + rcontent + ".   ";
-                    var outputData = JsonSerializer.Deserialize<dataList>(rcontent) ?? new dataList();
-                    showOutput = true;
-
-                    unimported.Clear();
-
-                    foreach (var d in outputData?.students ?? new List<blStudent>())
+                    var contentArray = property.Value.EnumerateArray();
+                    if (contentArray.Any())
                     {
-                        statusMessage += ($"Found student: {d?.firstname} {d?.lastname} {d?.id}.  ");
-                        var s = new blStudent { firstname = d?.firstname, lastname = d?.lastname, id = d?.id };
-                        outputData.students.Add(s);
-                        unimported.Add(new attendance.Components.Models.Student
+                        var firstContent = contentArray.First();
+                        if (firstContent.TryGetProperty("Text", out var textElement))
                         {
-                            Name = $"{d?.firstname} {d?.lastname}".Trim(),
-                            BUID = d?.id ?? string.Empty
-                        }); 
-                    } 
+                            var text = textElement.GetString() ?? string.Empty;
+                            if (text.Contains("```json") && text.Contains("```"))
+                            {
+                                jsonContent = text
+                                    .Replace("```json", "")
+                                    .Replace("```", "")
+                                    .Trim();
+                            }
+                            else
+                            {
+                                jsonContent = text;
+                            }
+                        }
+                    }
+                }
+            }
 
-                    return;
+            if (string.IsNullOrEmpty(jsonContent))
+            {
+                statusMessage = "Error: Could not find JSON content in the response.";
+                Logger.LogError(statusMessage);
+                return;
+            }
+
+            outputData = JsonSerializer.Deserialize<DataList>(jsonContent) ?? new();
+            showOutput = true;
+            unimported.Clear();
+
+            foreach (var d in outputData.students)
+            {
+                if (d != null)
+                {
+                    statusMessage += ($"Found student: {d.firstname} {d.lastname} {d.id}. ");
+                    unimported.Add(new Student
+                    {
+                        Name = $"{d.firstname} {d.lastname}".Trim(),
+                        BUID = d.id ?? string.Empty
+                    });
                 }
             }
         }
         catch (Exception ex)
         {
-            statusMessage += "Error: Invalid response from the AI service: " + ex.Message + ".   " + response;
-            Logger.LogError($"{statusMessage} Details: {ex.Message}");
-            return;
+            statusMessage = $"Error: Invalid response from the AI service: {ex.Message}";
+            Logger.LogError($"{statusMessage}. Details: {ex.Message}");
         }
-
-        <!-- var choices = responseJson.GetProperty("choices");
-        var message = choices[0].GetProperty("message");
-        var rcontent = message.GetProperty("content").ToString();
-        Logger.LogInformation(rcontent);
-        try
-        {
-            outputData = JsonSerializer.Deserialize<dataList>(rcontent) ?? new dataList();
-            showOutput = true;
-        }
-        catch (JsonException ex)
-        {
-            Logger.LogError($"JSON deserialization error: {ex.Message}");
-        } 
-        statusMessage = $"Found {outputData.students.Count} students.";
--->
-        // clear the list of students
-
-
-
-        //outputData.students.Add(new blStudent { firstname = "Test Student", lastname = "Doe", id = "123456789" });
-
     }
 
-    static List<attendance.Components.Models.Student> unimported = new List<attendance.Components.Models.Student>();
     private async Task import()
     {
-        StudentClass sc = new StudentClass(classname);
-        List<Student> list = await sc.LoadStudentsAsync();
-
-        if (list != null)
+        try
         {
-            foreach (var newStudent in unimported)
+            var sc = new StudentClass(classname);
+            var list = await sc.LoadStudentsAsync();
+
+            if (list != null)
             {
-            //    Console.WriteLine($"{d.firstname} {d.lastname} {d.id}");
-            
-                if (!string.IsNullOrWhiteSpace(newStudent.Name) && !string.IsNullOrWhiteSpace(newStudent.BUID))
+                foreach (var newStudent in unimported)
                 {
-                    list.Add(newStudent);
+                    if (!string.IsNullOrWhiteSpace(newStudent.Name) && !string.IsNullOrWhiteSpace(newStudent.BUID))
+                    {
+                        list.Add(newStudent);
+                    }
                 }
+                await sc.SaveStudentsAsync();
+                statusMessage = $"Successfully imported {unimported.Count} students.";
             }
-            await sc.SaveStudentsAsync();
+            else
+            {
+                statusMessage = "Error: Student list is null. Cannot import students.";
+                Logger.LogError(statusMessage);
+            }
         }
-        else
+        catch (Exception ex)
         {
-            Logger.LogError("Student list is null. Cannot import students.");
+            statusMessage = $"Error importing students: {ex.Message}";
+            Logger.LogError($"{statusMessage}. Details: {ex.Message}");
         }
     }
-
-    public class dataList {
-        public List<blStudent> students {get; set; }
-
-        public dataList() {
-            students = new List<blStudent>{};
-        }
-    }
-
-    public class blStudent {
-        public string? firstname {get; set;}
-        public string? lastname {get; set;}
-        public string? id {get; set;}
-    }
-
 }
 
 
