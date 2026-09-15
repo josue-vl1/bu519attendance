@@ -199,6 +199,37 @@ namespace attendance.Components.Models
             return false;
         }
 
+        public async Task<bool> UploadStudentImageAsync(string fileName, Stream content)
+        {
+            if (containerUri == null || credential == null)
+            {
+                error += "  - Azure Blob Storage is not configured. - ";
+                return false;
+            }
+
+            try
+            {
+                var containerClient = new Azure.Storage.Blobs.BlobContainerClient(containerUri, credential);
+                var blobClient = containerClient.GetBlobClient(Path.GetFileName(fileName));
+                var options = new Azure.Storage.Blobs.Models.BlobUploadOptions
+                {
+                    HttpHeaders = new Azure.Storage.Blobs.Models.BlobHttpHeaders
+                    {
+                        ContentType = "image/jpeg"
+                    }
+                };
+
+                await blobClient.UploadAsync(content, options);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error uploading student image: {e.Message}");
+                error += "  - Error uploading student image: " + e.Message + " - ";
+                return false;
+            }
+        }
+
         public async Task<List<Student>> LoadStudentDataAsync(string _date)
         {
             var date = System.Text.Encodings.Web.UrlEncoder.Default.Encode(_date) + ".json";

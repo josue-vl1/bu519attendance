@@ -84,6 +84,30 @@ else
         </tbody>
     </table>
 
+    <section class="mt-4" aria-labelledby="student-photos-heading">
+        <h2 id="student-photos-heading">Student Photos</h2>
+        <div class="mb-3">
+            <label for="student-photo-upload" class="form-label">
+                Select JPEG files named with each student's BUID
+            </label>
+            <InputFile id="student-photo-upload" class="form-control" accept=".jpg,.jpeg,image/jpeg"
+                multiple OnChange="OnImagesSelected" disabled="@uploadingImages" />
+        </div>
+        <button type="button" class="btn btn-primary" @onclick="UploadImagesAsync"
+            disabled="@(selectedImages.Count == 0 || uploadingImages)">
+            @(uploadingImages ? "Uploading..." : $"Upload {selectedImages.Count} photo(s)")
+        </button>
+
+        @if (!string.IsNullOrEmpty(imageUploadStatus))
+        {
+            <div class="alert alert-info mt-3" role="status">@imageUploadStatus</div>
+        }
+        @if (!string.IsNullOrEmpty(imageUploadError))
+        {
+            <div class="alert alert-danger mt-3" role="alert">@imageUploadError</div>
+        }
+    </section>
+
     @if (loading || saving)
     {
         <div
@@ -101,13 +125,20 @@ else
 }
 
 @code {
+    private const int MaxStudentImageCount = 500;
+    private const long MaxStudentImageSize = 10 * 1024 * 1024;
+
     private bool loading = false;
     private string classname = string.Empty;
     private bool saving = false;
+    private bool uploadingImages = false;
     private bool showButtons = false;
     private string principalName = string.Empty;
+    private string imageUploadStatus = string.Empty;
+    private string imageUploadError = string.Empty;
     private StudentClass? studentClass;
     private Student newStudent = new Student();
+    private IReadOnlyList<IBrowserFile> selectedImages = Array.Empty<IBrowserFile>();
     List<Student> students = new List<Student>();
 
     protected override async Task OnInitializedAsync()
@@ -164,6 +195,89 @@ else
         saving = false;
     }
 
+    private void OnImagesSelected(InputFileChangeEventArgs eventArgs)
+    {
+        imageUploadError = string.Empty;
+
+        try
+        {
+            selectedImages = eventArgs.GetMultipleFiles(MaxStudentImageCount);
+            imageUploadStatus = $"{selectedImages.Count} photo(s) selected for {classname}.";
+        }
+        catch (InvalidOperationException)
+        {
+            selectedImages = Array.Empty<IBrowserFile>();
+            imageUploadStatus = string.Empty;
+            imageUploadError = $"Select no more than {MaxStudentImageCount} photos at once.";
+        }
+    }
+
+    private async Task UploadImagesAsync()
+    {
+        if (studentClass == null || selectedImages.Count == 0)
+        {
+            return;
+        }
+
+        uploadingImages = true;
+        imageUploadError = string.Empty;
+        var uploadedCount = 0;
+        var skippedFiles = new List<string>();
+        var failedFiles = new List<string>();
+
+        try
+        {
+            for (var index = 0; index < selectedImages.Count; index++)
+            {
+                var image = selectedImages[index];
+                var extension = Path.GetExtension(image.Name);
+                var studentId = Path.GetFileNameWithoutExtension(image.Name).Trim();
+
+                if ((!extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase)
+                    && !extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
+                    || string.IsNullOrWhiteSpace(studentId)
+                    || image.Size == 0
+                    || image.Size > MaxStudentImageSize)
+                {
+                    skippedFiles.Add(image.Name);
+                    continue;
+                }
+
+                imageUploadStatus = $"Uploading {index + 1} of {selectedImages.Count} photos to {classname}...";
+                await InvokeAsync(StateHasChanged);
+
+                try
+                {
+                    await using var stream = image.OpenReadStream(MaxStudentImageSize);
+                    if (await studentClass.UploadStudentImageAsync($"{studentId}.jpg", stream))
+                    {
+                        uploadedCount++;
+                    }
+                    else
+                    {
+                        failedFiles.Add(image.Name);
+                    }
+                }
+                catch (Exception)
+                {
+                    failedFiles.Add(image.Name);
+                }
+            }
+
+            imageUploadStatus = $"Uploaded {uploadedCount} photo(s) to {classname}.";
+            selectedImages = Array.Empty<IBrowserFile>();
+
+            var problems = skippedFiles.Concat(failedFiles).ToList();
+            if (problems.Count > 0)
+            {
+                imageUploadError = $"{skippedFiles.Count} file(s) were skipped and {failedFiles.Count} failed: {string.Join(", ", problems)}";
+            }
+        }
+        finally
+        {
+            uploadingImages = false;
+        }
+    }
 
 
 }
