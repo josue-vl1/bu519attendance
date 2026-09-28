@@ -18,6 +18,20 @@
     justify-content: center;
 }
 
+.attendance-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+}
+
+.attendance-count {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
 .studentinfo {
     font-size: small;
 }

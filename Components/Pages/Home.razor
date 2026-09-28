@@ -14,7 +14,7 @@
 }
 else
 {
-    <h4>Daily attendance for:
+    <h4 class="attendance-heading">Daily attendance for:
         <select @onchange="OnDateChanged">
             <option value="">Select a date</option>
             @foreach (var date in availableDates)
@@ -23,6 +23,10 @@ else
             }
         </select>
         <button @onclick="() => UpdateAttendanceAsync()">Save</button>
+        @if (showStudents)
+        {
+            <span class="attendance-count" aria-live="polite">@AttendanceCount / @TotalStudentCount in attendance</span>
+        }
     </h4>
 
     @if (loading || saving)
@@ -109,6 +113,9 @@ else
     private List<DateTime> availableDates = new List<DateTime>();
 
     List<Student> students = new List<Student>();
+
+    private int AttendanceCount => students.Count(student => student.Present && !student.IsInactive);
+    private int TotalStudentCount => students.Count(student => !student.IsInactive);
 
     protected override async Task OnInitializedAsync()
     {
