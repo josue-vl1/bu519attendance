@@ -11,6 +11,7 @@ builder.Services.AddRazorComponents()
 builder.Services.TryAddEnumerable(
     ServiceDescriptor.Scoped<CircuitHandler, BlazorNonceService>(sp => sp.GetRequiredService<BlazorNonceService>()));
 
+builder.Services.AddSingleton<AttendanceUpdates>();
 builder.Services.AddScoped<BlazorNonceService>();
 builder.Services.AddHttpContextAccessor(); // Register IHttpContextAccessor
 builder.Services.AddScoped<HttpContextAccessorService>(); // Register HttpContextAccessorService

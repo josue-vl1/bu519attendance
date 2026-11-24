@@ -2,6 +2,8 @@
 
 @using attendance.Components.Models
 @using attendance.Services
+@implements IDisposable
+@inject AttendanceUpdates Updates
 @inject BlazorNonceService BlazorNonceService
 
 <PageTitle>Daily attendance for @selectedDate</PageTitle>
@@ -15,14 +17,21 @@
 else
 {
     <h4 class="attendance-heading">Daily attendance for:
-        <select @onchange="OnDateChanged">
+        <select disabled="@(loading || saving)" @onchange="OnDateChanged">
             <option value="">Select a date</option>
             @foreach (var date in availableDates)
             {
                 <option value="@date.ToString("MMMddyyyy")">@date.ToString("MMMM dd, yyyy")</option>
             }
         </select>
-        <button @onclick="() => UpdateAttendanceAsync()">Save</button>
+        <button disabled="@(!showStudents || saving || loading)"
+                @onclick="UpdateAttendanceAsync">
+            Save
+        </button>
+        @if (saveFailed)
+        {
+            <span role="alert">Attendance could not be saved. Please try again.</span>
+        }
         @if (showStudents)
         {
             <span class="attendance-count" aria-live="polite">@AttendanceCount / @TotalStudentCount in attendance</span>
@@ -76,7 +85,7 @@ else
                             @if (students[studentnumber].Present)
                             {
                                 <div class="exempt" @onclick:stopPropagation @onclick="() => ToggleExempt(localStudentNumber)">
-                                    <input type="checkbox" @bind="students[studentnumber].Exempt" />
+                                    <input type="checkbox" checked="@students[localStudentNumber].Exempt" />
                                     Exempt
                                 </div>
                             }
@@ -105,6 +114,10 @@ else
     private StudentClass? studentClass;
     private bool loading = false;
     private bool saving = false;
+    private bool dirty;
+    private bool disposed;
+    private bool saveFailed;
+    private IReadOnlyDictionary<string, (bool Present, bool Exempt)>? pendingUpdate;
     private bool showButtons = false;
     private bool showStudents = false;
     private string principalName = "foo";
@@ -128,6 +141,7 @@ else
         {
             classname = tempClassName;
             showButtons = true;
+            Updates.Saved += OnAttendanceSaved;
 
             availableDates.Clear();
             if (studentClass.scheduledDates.Count > 0)
@@ -182,6 +196,9 @@ else
 
     private async Task OnDateChanged(ChangeEventArgs e)
     {
+        dirty = false;
+        saveFailed = false;
+        pendingUpdate = null;
         if (e?.Value == null) 
         {
             selectedDate = availableDates.Count > 0 ? availableDates[0].ToString("MMMddyyyy") : string.Empty;
@@ -209,20 +226,83 @@ else
         loading = false;
         showStudents = true;
         //StateHasChanged();
+        if (pendingUpdate != null)
+        {
+            ApplyAttendance(pendingUpdate);
+            pendingUpdate = null;
+        }
     }
 
     // Save student attence data to blob storage
     private async Task UpdateAttendanceAsync()
     {
-        if (studentClass == null) return;
-        
+        if (studentClass == null || saving || !showStudents) return;
+
         saving = true;
-        StateHasChanged();
-        studentClass.Students = students;
-        await studentClass.SaveStudentDataAsync(selectedDate);
-        saving = false;
-        status = studentClass.status;
-        StateHasChanged();
+        saveFailed = false;
+
+        try
+        {
+            studentClass.Students = students;
+            bool saved = await studentClass.SaveStudentDataAsync(selectedDate);
+
+            if (!saved)
+            {
+                saveFailed = true;
+                return;
+            }
+
+            dirty = false;
+            var marks = students.ToDictionary(
+                student => student.BUID,
+                student => (student.Present, student.Exempt));
+
+            await Updates.PublishAsync(classname, selectedDate, marks);
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private Task OnAttendanceSaved(
+        string className,
+        string date,
+        IReadOnlyDictionary<string, (bool Present, bool Exempt)> marks)
+    {
+        return InvokeAsync(() =>
+        {
+            if (disposed || className != classname || date != selectedDate) return;
+            if (dirty || saving) return;
+
+            if (loading)
+            {
+                pendingUpdate = marks;
+                return;
+            }
+
+            ApplyAttendance(marks);
+            StateHasChanged();
+        });
+    }
+
+    private void ApplyAttendance(
+        IReadOnlyDictionary<string, (bool Present, bool Exempt)> marks)
+    {
+        foreach (var student in students)
+        {
+            if (marks.TryGetValue(student.BUID, out var mark))
+            {
+                student.Present = mark.Present;
+                student.Exempt = mark.Exempt;
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        disposed = true;
+        Updates.Saved -= OnAttendanceSaved;
     }
 
     void TogglePresent(int index)
